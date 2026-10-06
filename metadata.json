@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Administrasi Sekolah & Pengadaan Barang",
+  "description": "Aplikasi administrasi sekolah modern untuk profil sekolah, kop surat standar, data master toko dan barang, transaksi belanja, kalkulasi pajak, berita acara BAST/BAHPB/BAPB, surat pesanan, dan rekapitulasi laporan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
