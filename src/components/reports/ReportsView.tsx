@@ -3,7 +3,7 @@ import { Transaction, Store, ExpenseType } from '../../types';
 import { useSchool } from '../../context/SchoolContext';
 import { OfficialLetterhead } from '../documents/OfficialLetterhead';
 import { formatRupiah, getIndonesianDate } from '../../utils/numbering';
-import { generateAndDownloadPdf, printOrSaveDocument } from '../../utils/printPdfHelper';
+import { generateAndDownloadPdf } from '../../utils/printPdfHelper';
 import { useToast } from '../common/Toast';
 import {
   FileSpreadsheet,
@@ -128,26 +128,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     }
   };
 
-  const handlePrintReport = async () => {
-    const element = document.getElementById('printable-report-page');
-    if (!element) return;
-    setIsExportingPdf(true);
-    setPdfProgress('Membuka cetak...');
+  const handlePrintReport = () => {
     try {
-      const res = await printOrSaveDocument(element, {
-        filename: getReportFilename(),
-        documentTitle: 'Laporan Administrasi Sekolah',
-        onProgress: (p) => setPdfProgress(p),
-      });
-      if (res.method === 'pdf') {
-        showToast('Pencetakan dialihkan ke unduh PDF karena batasan browser.', 'info');
-      }
+      window.print();
     } catch (err) {
-      console.warn('Print report error:', err);
-      await handleDownloadReportPdf();
-    } finally {
-      setIsExportingPdf(false);
-      setPdfProgress('');
+      console.warn('Native window.print failed:', err);
+      showToast('Browser memblokir perintah cetak. Silakan gunakan tombol Simpan PDF.', 'info');
     }
   };
 

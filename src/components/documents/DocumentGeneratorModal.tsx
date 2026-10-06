@@ -4,7 +4,7 @@ import { useSchool } from '../../context/SchoolContext';
 import { OfficialLetterhead } from './OfficialLetterhead';
 import { formatRupiah, terbilangRupiah, getIndonesianDate } from '../../utils/numbering';
 import { getTaxLabel } from '../../utils/taxCalculator';
-import { generateAndDownloadPdf, printOrSaveDocument } from '../../utils/printPdfHelper';
+import { generateAndDownloadPdf } from '../../utils/printPdfHelper';
 import { useToast } from '../common/Toast';
 import {
   X,
@@ -82,29 +82,12 @@ export const DocumentGeneratorModal: React.FC<DocumentGeneratorModalProps> = ({
     }
   };
 
-  const handlePrint = async () => {
-    const docInfo = getDocInfo();
-    const element = document.getElementById('printable-document-page');
-    if (!element) return;
-
-    setIsExportingPdf(true);
-    setPdfProgress('Membuka cetak...');
+  const handlePrint = () => {
     try {
-      const res = await printOrSaveDocument(element, {
-        filename: docInfo.filename,
-        documentTitle: docInfo.title,
-        onProgress: (p) => setPdfProgress(p),
-      });
-      if (res.method === 'pdf') {
-        showToast('Pencetakan dialihkan ke unduh PDF karena batasan preview browser.', 'info');
-      }
+      window.print();
     } catch (err) {
-      console.warn('Print error:', err);
-      // Fallback directly to PDF
-      await handleDownloadPdf();
-    } finally {
-      setIsExportingPdf(false);
-      setPdfProgress('');
+      console.warn('Native window.print failed:', err);
+      showToast('Browser memblokir perintah cetak. Silakan gunakan tombol Simpan PDF.', 'info');
     }
   };
 
