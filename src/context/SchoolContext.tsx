@@ -36,25 +36,44 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
- // Buka file src/context/SchoolContext.tsx
-useEffect(() => {
-  // Langsung set data sekolah lokal tanpa memanggil fetch API
-  setProfile({
-    namaSekolah: 'SD NEGERI KALIBOTO KIDUL 05',
-    logoUrl: '/logo.jpg'
-  });
-}, []);
+  useEffect(() => {
+    // Inisialisasi awal profil sekolah dan sinkronkan dengan API jika tersedia
+    setProfile(prev => ({
+      ...prev,
+      namaSekolah: 'SD NEGERI KALIBOTO KIDUL 05',
+      logoUrl: prev.logoUrl || '/logo.jpg',
+    }));
+    refreshSchoolData();
+  }, [refreshSchoolData]);
 
   const updateProfile = async (data: Partial<SchoolProfile>) => {
-    const res = await api.updateSchoolProfile(data);
-    setProfile(res);
-    return res;
+    try {
+      const res = await api.updateSchoolProfile(data);
+      if (res) {
+        setProfile(res);
+        return res;
+      }
+    } catch (err) {
+      console.warn('Gagal simpan ke API, memperbarui state lokal:', err);
+    }
+    const fallback = { ...profile, ...data, updatedAt: new Date().toISOString() };
+    setProfile(fallback as SchoolProfile);
+    return fallback as SchoolProfile;
   };
 
   const updateLetterhead = async (data: Partial<SchoolLetterhead>) => {
-    const res = await api.updateSchoolLetterhead(data);
-    setLetterhead(res);
-    return res;
+    try {
+      const res = await api.updateSchoolLetterhead(data);
+      if (res) {
+        setLetterhead(res);
+        return res;
+      }
+    } catch (err) {
+      console.warn('Gagal simpan kop surat ke API, memperbarui state lokal:', err);
+    }
+    const fallback = { ...letterhead, ...data, updatedAt: new Date().toISOString() };
+    setLetterhead(fallback as SchoolLetterhead);
+    return fallback as SchoolLetterhead;
   };
 
   return (
