@@ -47,18 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (username: string, pass: string) => {
-     // Validasi lokal langsung (client-side)
-    if (username === 'admin' && pass === 'admin123') {
-     const userData = { username: 'admin', role: 'admin' };
-     setUser(userData);
-     localStorage.setItem('user_session', JSON.stringify(userData));
-     return { success: true };
-    } else {
-         return { 
-         success: false, 
-         error: 'Username atau password salah.'};
-    }
-  };
+  // Langsung cek kredensial secara lokal di browser
+  if (username === 'admin' && pass === 'admin123') {
+    const userData = { username: 'admin', role: 'admin' };
+    setUser(userData);
+    localStorage.setItem('user_session', JSON.stringify(userData));
+    return { success: true };
+  } else {
+    return { 
+      success: false, 
+      error: 'Username atau password salah.' 
+    };
+  }
+};
 
   const logout = async () => {
     try {
