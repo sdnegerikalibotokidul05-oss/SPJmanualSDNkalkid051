@@ -3,7 +3,7 @@ import { Transaction, Store, ExpenseType } from '../../types';
 import { useSchool } from '../../context/SchoolContext';
 import { OfficialLetterhead } from '../documents/OfficialLetterhead';
 import { formatRupiah, getIndonesianDate } from '../../utils/numbering';
-import { generateAndDownloadPdf } from '../../utils/printPdfHelper';
+import { generateAndDownloadPdf, printDocument, PaperSize } from '../../utils/printPdfHelper';
 import { useToast } from '../common/Toast';
 import {
   FileSpreadsheet,
@@ -36,6 +36,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reportType, setReportType] = useState<'rekap-belanja' | 'rekap-toko' | 'register-dokumen'>('rekap-belanja');
+  const [paperSize, setPaperSize] = useState<PaperSize>('A4');
 
   // Filtered transactions
   const filteredTrx = useMemo(() => {
@@ -89,13 +90,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     const dateStr = new Date().toISOString().split('T')[0];
     switch (reportType) {
       case 'rekap-belanja':
-        return `Rekapitulasi_Belanja_${dateStr}.pdf`;
+        return `Rekapitulasi_Belanja_${dateStr}_${paperSize}.pdf`;
       case 'rekap-toko':
-        return `Rekapitulasi_Rekanan_${dateStr}.pdf`;
+        return `Rekapitulasi_Rekanan_${dateStr}_${paperSize}.pdf`;
       case 'register-dokumen':
-        return `Register_Nomor_Dokumen_${dateStr}.pdf`;
+        return `Register_Nomor_Dokumen_${dateStr}_${paperSize}.pdf`;
       default:
-        return `Laporan_Sekolah_${dateStr}.pdf`;
+        return `Laporan_Sekolah_${dateStr}_${paperSize}.pdf`;
     }
   };
 
@@ -106,16 +107,17 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       return;
     }
     setIsExportingPdf(true);
-    setPdfProgress('Menyiapkan file PDF...');
+    setPdfProgress(`Menyiapkan file PDF ${paperSize}...`);
     try {
       const filename = getReportFilename();
       const ok = await generateAndDownloadPdf(element, {
         filename,
-        documentTitle: 'Laporan Administrasi Sekolah',
+        documentTitle: `Laporan Administrasi Sekolah (${paperSize})`,
+        paperSize,
         onProgress: (p) => setPdfProgress(p),
       });
       if (ok) {
-        showToast('Laporan berhasil diunduh sebagai PDF!', 'success');
+        showToast(`Laporan berhasil diunduh sebagai PDF (${paperSize})!`, 'success');
       } else {
         showToast('Gagal membuat file PDF. Silakan coba kembali.', 'error');
       }
@@ -128,12 +130,16 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     }
   };
 
-  const handlePrintReport = () => {
-    try {
-      window.print();
-    } catch (err) {
-      console.warn('Native window.print failed:', err);
-      showToast('Browser memblokir perintah cetak. Silakan gunakan tombol Simpan PDF.', 'info');
+  const handlePrintReport = async () => {
+    showToast(`Membuka menu cetak laporan (${paperSize === 'F4' ? 'F4 / Folio 21x33cm' : 'A4 21x29.7cm'})...`, 'info');
+    const ok = await printDocument('printable-report-page', {
+      documentTitle: `Laporan Administrasi Sekolah (${paperSize})`,
+      isModal: false,
+      paperSize,
+    });
+    if (!ok) {
+      showToast('Menu cetak browser tidak tersedia di lingkungan ini. Laporan dialihkan ke unduhan PDF siap cetak...', 'info');
+      handleDownloadReportPdf();
     }
   };
 
@@ -153,13 +159,41 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
+          {/* Paper Size Switcher: A4 vs F4 */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setPaperSize('A4')}
+              className={`px-3 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
+                paperSize === 'A4'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Pilih Ukuran Kertas A4 (21.0 × 29.7 cm)"
+            >
+              A4 (21×29.7)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaperSize('F4')}
+              className={`px-3 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
+                paperSize === 'F4'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Pilih Ukuran Kertas F4 / Folio (21.0 × 33.0 cm) - Standar Sekolah & Instansi RI"
+            >
+              F4 (21×33 cm)
+            </button>
+          </div>
+
           {/* Direct PDF Download (.pdf) */}
           <button
             onClick={handleDownloadReportPdf}
             disabled={isExportingPdf}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
-            title="Unduh langsung laporan resmi dalam format PDF (.pdf)"
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            title={`Unduh langsung laporan resmi dalam format PDF (${paperSize})`}
           >
             {isExportingPdf ? (
               <>
@@ -169,7 +203,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                <span>Simpan PDF (.pdf)</span>
+                <span>Simpan PDF ({paperSize})</span>
               </>
             )}
           </button>
@@ -178,11 +212,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <button
             onClick={handlePrintReport}
             disabled={isExportingPdf}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-2 transition-colors cursor-pointer"
-            title="Cetak langsung laporan ke printer"
+            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            title={`Cetak langsung laporan ke printer (${paperSize})`}
           >
             <Printer className="w-4 h-4" />
-            <span>Cetak Laporan</span>
+            <span>Cetak ({paperSize})</span>
           </button>
         </div>
       </div>
@@ -296,7 +330,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       <div className="bg-slate-200/80 p-4 sm:p-8 rounded-xl flex justify-center shadow-inner print:p-0 print:bg-white">
         <div
           id="printable-report-page"
-          className="bg-white shadow-xl w-full max-w-[210mm] min-h-[297mm] p-[12.7mm] text-black border border-slate-300 print:border-none print:shadow-none print:p-0 print:m-0"
+          data-print-container="true"
+          className={`bg-white shadow-xl w-full max-w-[210mm] ${
+            paperSize === 'F4' ? 'min-h-[330mm]' : 'min-h-[297mm]'
+          } p-[12.7mm] text-black border border-slate-300 print:border-none print:shadow-none print:p-0 print:m-0`}
           style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
         >
           {/* Letterhead */}

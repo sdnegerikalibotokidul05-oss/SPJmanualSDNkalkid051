@@ -6,18 +6,22 @@
   }
 }
 
-/* Ensure printable containers have clean standard RGB/Hex fallbacks */
+/* Base print-ready document container fallbacks */
 #printable-document-page,
 #printable-report-page,
+[data-print-container="true"],
 .printable-document {
   background-color: #ffffff;
   color: #000000;
 }
 
+/* ==========================================================================
+   Browser Native Printing Rules (@media print)
+   ========================================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12.7mm;
+    margin: 12.7mm; /* Standard Narrow Margin (1.27 cm) */
   }
 
   html,
@@ -29,12 +33,31 @@
     padding: 0 !important;
     overflow: visible !important;
     height: auto !important;
+    min-height: auto !important;
+    width: 100% !important;
   }
 
-  /* Reset fixed modal containers and overlays during print */
+  /* 1. Hide all non-printable UI chrome: navbar, sidebars, buttons, toolbars */
+  header,
+  aside,
+  nav,
+  button,
+  .print\:hidden,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  /* 2. When printing from modal, hide the main app content in background */
+  body[data-print-modal="true"] main {
+    display: none !important;
+  }
+
+  /* 3. Reset modal overlays and layout constraints so printing is never clipped */
   .fixed,
   .overflow-hidden,
-  .overflow-y-auto {
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .max-h-\[96vh\] {
     position: static !important;
     overflow: visible !important;
     max-height: none !important;
@@ -44,27 +67,62 @@
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    backdrop-filter: none !important;
   }
 
-  /* Hide UI elements */
-  header,
-  aside,
-  nav,
-  button,
-  .print\:hidden {
-    display: none !important;
+  /* Remove dark modal overlay backdrops & outer borders during print */
+  .bg-slate-900\/70,
+  .backdrop-blur-xs,
+  .rounded-2xl,
+  .shadow-2xl,
+  .bg-slate-200\/70,
+  .bg-slate-200\/80 {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
   }
 
+  /* 4. Specific active print container targeted dynamically */
+  [data-print-container="true"],
   #printable-document-page,
   #printable-report-page,
   .printable-document {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    margin: 0 auto !important;
     background-color: #ffffff !important;
     color: #000000 !important;
+  }
+
+  /* 5. Page Break Rules: Avoid splitting table rows and signature blocks across pages */
+  tr,
+  .signature-block,
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  .page-break-before {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  .page-break-after {
+    break-after: page !important;
+    page-break-after: always !important;
   }
 }
