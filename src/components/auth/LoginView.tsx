@@ -26,10 +26,17 @@ export const LoginView: React.FC = () => {
     try {
       const res = await login(username, password);
       if (!res.success) {
-        setErrorMessage(res.error || 'Username atau password salah.');
+        // Ekstrak string agar tidak jadi [object Object]
+        const rawErr = res.error as any;
+        const errDetail = typeof rawErr === 'object' && rawErr !== null
+          ? (rawErr.message || JSON.stringify(rawErr)) 
+          : rawErr;
+        setErrorMessage(errDetail || 'Username atau password salah.');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Terjadi kesalahan pada sistem autentikasi.');
+      // PERBAIKAN 2: Pastikan menangkap string pesan eror
+      const msg = err?.response?.data?.message || err?.message || 'Terjadi kesalahan pada sistem autentikasi.';
+      setErrorMessage(typeof msg === 'object' ? JSON.stringify(msg) : msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -43,11 +50,15 @@ export const LoginView: React.FC = () => {
           {/* Top Brand Banner */}
           <div className="bg-slate-900 p-8 text-center border-b border-slate-800 text-white relative">
             <div className="mx-auto w-20 h-20 rounded-2xl bg-white p-2 shadow-md flex items-center justify-center mb-4">
+              {/* PERBAIKAN: Gunakan path relatif publik (/logo.jpg) atau SVG placeholder sebagai fallback */}
               <img
-                src={profile.logoUrl || '/src/assets/images/logo_sdn_kaliboto_kidul_05_1791253078034.jpg'}
+                src={profile.logoUrl || '/logo.jpg'}
                 alt="Logo Sekolah"
                 className="w-full h-full object-contain"
-                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  // Fallback jika gambar gagal dimuat
+                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=SD';
+                }}
               />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-white uppercase">
