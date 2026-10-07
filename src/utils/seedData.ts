@@ -1,5 +1,5 @@
 import { DatabaseSchema, Transaction } from '../types/index.ts';
-import { calculateItemAmounts, calculateTransactionSummary } from './taxCalculator';
+import { calculateItemAmounts, calculateTransactionSummary } from './taxCalculator.ts';
 
 export function getInitialSeedData(): DatabaseSchema {
   const item1Amounts = calculateItemAmounts(10, 52000, 'PPN_11'); // Kertas HVS: 520.000 (PPN included)
