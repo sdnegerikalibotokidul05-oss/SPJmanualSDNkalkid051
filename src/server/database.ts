@@ -2,39 +2,71 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { DatabaseSchema, User, Store, ExpenseType, ItemMaster, Transaction, SchoolProfile, SchoolLetterhead, DocumentSequenceConfig, AuditLog } from '../types/index.ts';
-import { getInitialSeedData } from '../utils/seedData';
-import { generateDocumentNumber } from '../utils/numbering';
+import { getInitialSeedData } from '../utils/seedData.ts';
+import { generateDocumentNumber } from '../utils/numbering.ts';
 
-const DB_DIR = path.resolve(process.cwd(), 'data');
-const DB_FILE = path.join(DB_DIR, 'school_database.json');
+const isVercel = Boolean(process.env.VERCEL || process.env.NOW_REGION);
+const DB_DIR = isVercel ? '/tmp' : path.resolve(process.cwd(), 'data');
+const DB_FILE = isVercel ? path.join('/tmp', 'school_database.json') : path.join(DB_DIR, 'school_database.json');
+const BUNDLED_DB_FILE = path.resolve(process.cwd(), 'data', 'school_database.json');
 
 function ensureDbFile(): void {
   if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+    try {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    } catch {
+      // In some read-only systems, directory might already exist
+    }
   }
   if (!fs.existsSync(DB_FILE)) {
+    // If running in Vercel serverless, copy initial database from bundled data folder if available
+    if (isVercel && fs.existsSync(BUNDLED_DB_FILE)) {
+      try {
+        const bundledContent = fs.readFileSync(BUNDLED_DB_FILE, 'utf-8');
+        fs.writeFileSync(DB_FILE, bundledContent, 'utf-8');
+        return;
+      } catch (copyErr) {
+        console.warn('Failed to copy bundled db on Vercel, falling back to seed:', copyErr);
+      }
+    }
     const seed = getInitialSeedData();
     fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), 'utf-8');
   }
 }
 
+let memoryCache: DatabaseSchema | null = null;
+
 export function readDB(): DatabaseSchema {
+  if (memoryCache) {
+    return memoryCache;
+  }
   ensureDbFile();
   try {
     const content = fs.readFileSync(DB_FILE, 'utf-8');
     const parsed = JSON.parse(content);
+    memoryCache = parsed;
     return parsed;
   } catch (err) {
     console.error('Error reading database file, repairing with seed:', err);
     const seed = getInitialSeedData();
-    fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), 'utf-8');
+    memoryCache = seed;
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), 'utf-8');
+    } catch (writeErr) {
+      console.warn('Failed to write seed during readDB fallback:', writeErr);
+    }
     return seed;
   }
 }
 
 export function writeDB(db: DatabaseSchema): void {
+  memoryCache = db;
   ensureDbFile();
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Failed to write database file to disk:', err);
+  }
 }
 
 export function recordAuditLog(user: string, aktivitas: string, idData: string, keterangan: string): void {

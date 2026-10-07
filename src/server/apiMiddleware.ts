@@ -6,9 +6,9 @@ import {
   updateCredentials,
   recordAuditLog,
   getAndIncrementSequences,
-} from './database';
-import { getInitialSeedData } from '../utils/seedData';
-import { Store, ExpenseType, ItemMaster, Transaction } from '../types';
+} from './database.ts';
+import { getInitialSeedData } from '../utils/seedData.ts';
+import { Store, ExpenseType, ItemMaster, Transaction } from '../types/index.ts';
 
 function parseJsonBody(req: IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {
