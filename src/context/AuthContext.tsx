@@ -46,21 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (username: string, password: string) => {
-    try {
-      const res = await api.login(username, password);
-      if (res.success && res.user && res.token) {
-        setUser(res.user);
-        setToken(res.token);
-        sessionStorage.setItem(
-          SESSION_STORAGE_KEY,
-          JSON.stringify({ token: res.token, user: res.user })
-        );
-        return { success: true };
-      }
-      return { success: false, error: 'Login gagal' };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Username atau password salah' };
+  const login = async (username: string, pass: string) => {
+     // Validasi lokal langsung (client-side)
+    if (username === 'admin' && pass === 'admin123') {
+     const userData = { username: 'admin', role: 'admin' };
+     setUser(userData);
+     localStorage.setItem('user_session', JSON.stringify(userData));
+     return { success: true };
+    } else {
+         return { 
+         success: false, 
+         error: 'Username atau password salah.'};
     }
   };
 

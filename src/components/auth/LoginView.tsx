@@ -52,13 +52,13 @@ export const LoginView: React.FC = () => {
             <div className="mx-auto w-20 h-20 rounded-2xl bg-white p-2 shadow-md flex items-center justify-center mb-4">
               {/* PERBAIKAN: Gunakan path relatif publik (/logo.jpg) atau SVG placeholder sebagai fallback */}
               <img
-                src={profile.logoUrl || '/logo.jpg'}
-                alt="Logo Sekolah"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  // Fallback jika gambar gagal dimuat
-                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=SD';
-                }}
+                 src={profile.logoUrl || '/logo.jpg'}
+                 alt="Logo Sekolah"
+                 className="w-full h-full object-contain"
+                 onError={(e) => {
+                 // Memakai SVG Data URL lokal langsung (tidak butuh koneksi internet ke website luar)
+                 (e.target as HTMLImageElement).src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="%234f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+                 }}
               />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-white uppercase">

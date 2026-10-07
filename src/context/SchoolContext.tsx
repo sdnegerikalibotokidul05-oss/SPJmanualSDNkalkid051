@@ -36,9 +36,14 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  useEffect(() => {
-    refreshSchoolData();
-  }, [refreshSchoolData]);
+ // Buka file src/context/SchoolContext.tsx
+useEffect(() => {
+  // Langsung set data sekolah lokal tanpa memanggil fetch API
+  setProfile({
+    namaSekolah: 'SD NEGERI KALIBOTO KIDUL 05',
+    logoUrl: '/logo.jpg'
+  });
+}, []);
 
   const updateProfile = async (data: Partial<SchoolProfile>) => {
     const res = await api.updateSchoolProfile(data);
