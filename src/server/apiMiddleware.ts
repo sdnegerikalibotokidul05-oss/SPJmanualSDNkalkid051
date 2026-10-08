@@ -13,6 +13,20 @@ import { getInitialSeedData } from '../utils/seedData.ts';
 import { Store, ExpenseType, ItemMaster, Transaction } from '../types/index.ts';
 
 function parseJsonBody(req: IncomingMessage): Promise<any> {
+  const reqAny = req as any;
+  if (reqAny.body !== undefined && reqAny.body !== null) {
+    if (typeof reqAny.body === 'object') {
+      return Promise.resolve(reqAny.body);
+    }
+    if (typeof reqAny.body === 'string') {
+      try {
+        return Promise.resolve(JSON.parse(reqAny.body));
+      } catch {
+        return Promise.resolve({});
+      }
+    }
+  }
+
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', chunk => {
@@ -33,6 +47,9 @@ function parseJsonBody(req: IncomingMessage): Promise<any> {
 function sendJson(res: ServerResponse, statusCode: number, data: any) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.end(JSON.stringify(data));
 }
 
