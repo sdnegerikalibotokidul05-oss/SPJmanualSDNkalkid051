@@ -27,8 +27,8 @@
     "emailSekolah": "sdnegerikalibotokidul05@gmail.com",
     "namaPengurusBarang": "Siti Rahmawati, S.Pd.",
     "nipPengurusBarang": "19850412 201001 2 018",
-    "logoUrl": "/src/assets/images/logo_sdn_kaliboto_kidul_05_1791253078034.jpg",
-    "updatedAt": "2026-10-05T08:00:00.000Z"
+    "logoUrl": "/logo.jpg",
+    "updatedAt": "2026-10-08T01:33:25.885Z"
   },
   "school_letterhead": {
     "id": "default",
@@ -315,6 +315,110 @@
   },
   "audit_logs": [
     {
+      "id": "log-1791423205885-9c56p",
+      "user": "admin",
+      "aktivitas": "Ubah Profil Sekolah",
+      "waktu": "2026-10-08T01:33:25.885Z",
+      "idData": "PROFIL",
+      "keterangan": "Profil sekolah diperbarui: SD NEGERI KALIBOTO KIDUL 05"
+    },
+    {
+      "id": "log-1791423205877-1ag14",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T01:33:25.877Z",
+      "idData": "TRX-202610-0004",
+      "keterangan": "Transaksi TRX-202610-0004 bernilai Rp 275.000 dihapus"
+    },
+    {
+      "id": "log-1791423205866-ihpl7",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T01:33:25.866Z",
+      "idData": "TRX-202610-0004",
+      "keterangan": "Transaksi belanja #4 (Toko Buku & ATK Cahaya Ilmu) senilai Rp 275.000 disimpan"
+    },
+    {
+      "id": "log-1791423134880-0ps2d",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T01:32:14.880Z",
+      "idData": "TRX-202610-1791420523760",
+      "keterangan": "Transaksi TRX-202610-1791420523760 bernilai Rp 500.000 dihapus"
+    },
+    {
+      "id": "log-1791423124770-nmxf2",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T01:32:04.770Z",
+      "idData": "TRX-202610-0006",
+      "keterangan": "Transaksi TRX-202610-0006 bernilai Rp 125.000 dihapus"
+    },
+    {
+      "id": "log-1791423124764-6iqbq",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T01:32:04.764Z",
+      "idData": "TRX-202610-0006",
+      "keterangan": "Transaksi belanja #6 (Toko Buku & ATK Cahaya Ilmu) senilai Rp 125.000 disimpan"
+    },
+    {
+      "id": "log-1791423107999-3itbg",
+      "user": "admin",
+      "aktivitas": "Ubah Profil Sekolah",
+      "waktu": "2026-10-08T01:31:47.999Z",
+      "idData": "PROFIL",
+      "keterangan": "Profil sekolah diperbarui: SD NEGERI KALIBOTO KIDUL 05"
+    },
+    {
+      "id": "log-1791423107978-7xdgi",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T01:31:47.978Z",
+      "idData": "TRX-202610-1791420523761",
+      "keterangan": "Transaksi TRX-202610-1791420523761 bernilai Rp 125.000 dihapus"
+    },
+    {
+      "id": "log-1791423107953-d3syw",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T01:31:47.953Z",
+      "idData": "TRX-202610-1791420523761",
+      "keterangan": "Transaksi belanja #1791420523761 (Toko Buku & ATK Cahaya Ilmu) senilai Rp 125.000 disimpan"
+    },
+    {
+      "id": "log-1791422734806-oz9xa",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T01:25:34.806Z",
+      "idData": "TRX-202610-1791420523760",
+      "keterangan": "Transaksi belanja #1791420523760 (CV Toko Buku Berkah) senilai Rp 500.000 disimpan"
+    },
+    {
+      "id": "log-1791422581755-nfg4q",
+      "user": "admin",
+      "aktivitas": "Ubah Profil Sekolah",
+      "waktu": "2026-10-08T01:23:01.755Z",
+      "idData": "PROFIL",
+      "keterangan": "Profil sekolah diperbarui: SD NEGERI KALIBOTO KIDUL 05 TEST"
+    },
+    {
+      "id": "log-1791422442487-xjfmj",
+      "user": "admin",
+      "aktivitas": "Ubah Profil Sekolah",
+      "waktu": "2026-10-08T01:20:42.487Z",
+      "idData": "PROFIL",
+      "keterangan": "Profil sekolah diperbarui: SD NEGERI KALIBOTO KIDUL 05"
+    },
+    {
+      "id": "log-1791422428639-fycrp",
+      "user": "admin",
+      "aktivitas": "Ubah Profil Sekolah",
+      "waktu": "2026-10-08T01:20:28.639Z",
+      "idData": "PROFIL",
+      "keterangan": "Profil sekolah diperbarui: SD NEGERI KALIBOTO KIDUL 05"
+    },
+    {
       "id": "log-1791420523759-aa8jg",
       "user": "admin",
       "aktivitas": "Tambah Data Toko",
@@ -467,11 +571,5 @@
       "keterangan": "Transaksi Belanja Bahan Pembersih UD. Berkah Sarana Edukasi senilai Rp 257.500 dibuat"
     }
   ],
-  "deleted_ids": [
-    "TRX-202610-0003",
-    "TRX-202610-0002",
-    "TRX-202610-0004",
-    "TRX-202610-0005",
-    "store-1791420523759"
-  ]
+  "deleted_ids": []
 }

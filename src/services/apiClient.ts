@@ -16,6 +16,8 @@ const LOCAL_TRX_KEY = 'school_db_transactions';
 const LOCAL_STORES_KEY = 'school_db_stores';
 const LOCAL_ITEMS_KEY = 'school_db_items';
 const LOCAL_EXP_KEY = 'school_db_expense_types';
+const LOCAL_PROFILE_KEY = 'school_db_profile';
+const LOCAL_LETTERHEAD_KEY = 'school_db_letterhead';
 
 function getDeletedIds(): Set<string> {
   try {
@@ -126,44 +128,112 @@ export const api = {
 
   // School Profile & Kop Surat
   async getSchoolProfile(): Promise<SchoolProfile> {
-    return fetchJson(`${BASE_URL}/school/profile`);
+    try {
+      const serverData = await fetchJson<SchoolProfile>(`${BASE_URL}/school/profile`);
+      if (serverData && serverData.namaSekolah) {
+        try {
+          localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverData));
+        } catch {
+          // ignore quota error
+        }
+        return serverData;
+      }
+    } catch (err) {
+      console.warn('Gagal ambil profil sekolah dari server, menggunakan cache lokal:', err);
+    }
+    try {
+      const cached = localStorage.getItem(LOCAL_PROFILE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // ignore
+    }
+    return null as any;
   },
 
   async updateSchoolProfile(profile: Partial<SchoolProfile> & { operator?: string }): Promise<SchoolProfile> {
-    return fetchJson(`${BASE_URL}/school/profile`, {
-      method: 'PUT',
-      body: JSON.stringify(profile),
-    });
+    try {
+      const cached = localStorage.getItem(LOCAL_PROFILE_KEY);
+      const existing = cached ? JSON.parse(cached) : {};
+      const updatedLocal = { ...existing, ...profile, updatedAt: new Date().toISOString() };
+      try {
+        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(updatedLocal));
+      } catch {
+        // ignore quota error
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const serverRes = await fetchJson<SchoolProfile>(`${BASE_URL}/school/profile`, {
+        method: 'PUT',
+        body: JSON.stringify(profile),
+      });
+      if (serverRes) {
+        try {
+          localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverRes));
+        } catch {}
+        return serverRes;
+      }
+    } catch (err) {
+      console.warn('Server updateSchoolProfile failed, saved locally:', err);
+    }
+    try {
+      const cached = localStorage.getItem(LOCAL_PROFILE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return profile as SchoolProfile;
   },
 
   async getSchoolLetterhead(): Promise<SchoolLetterhead> {
-    return fetchJson(`${BASE_URL}/school/letterhead`);
+    try {
+      const serverData = await fetchJson<SchoolLetterhead>(`${BASE_URL}/school/letterhead`);
+      if (serverData) {
+        try {
+          localStorage.setItem(LOCAL_LETTERHEAD_KEY, JSON.stringify(serverData));
+        } catch {}
+        return serverData;
+      }
+    } catch (err) {
+      console.warn('Gagal ambil kop surat dari server, menggunakan cache lokal:', err);
+    }
+    try {
+      const cached = localStorage.getItem(LOCAL_LETTERHEAD_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null as any;
   },
 
   async updateSchoolLetterhead(letterhead: Partial<SchoolLetterhead> & { operator?: string }): Promise<SchoolLetterhead> {
-    return fetchJson(`${BASE_URL}/school/letterhead`, {
-      method: 'PUT',
-      body: JSON.stringify(letterhead),
-    });
+    try {
+      const res = await fetchJson<SchoolLetterhead>(`${BASE_URL}/school/letterhead`, {
+        method: 'PUT',
+        body: JSON.stringify(letterhead),
+      });
+      if (res) {
+        try {
+          localStorage.setItem(LOCAL_LETTERHEAD_KEY, JSON.stringify(res));
+        } catch {}
+        return res;
+      }
+    } catch (err) {
+      console.warn('Gagal update kop surat ke server:', err);
+    }
+    return letterhead as SchoolLetterhead;
   },
 
   // Stores
   async getStores(): Promise<Store[]> {
-    const deletedSet = getDeletedIds();
-    const local = (getLocalData<Store>(LOCAL_STORES_KEY) || []).filter(s => !deletedSet.has(s.id));
     try {
       const serverData = await fetchJson<Store[]>(`${BASE_URL}/stores`);
       if (Array.isArray(serverData)) {
-        const filteredServer = serverData.filter(s => !deletedSet.has(s.id));
-        const serverIds = new Set(filteredServer.map(s => s.id));
-        const merged = [...filteredServer, ...local.filter(s => !serverIds.has(s.id))];
-        setLocalData(LOCAL_STORES_KEY, merged);
-        return merged;
+        setLocalData(LOCAL_STORES_KEY, serverData);
+        return serverData;
       }
     } catch (err) {
       console.warn('Gagal ambil data toko dari server, menggunakan cache lokal:', err);
     }
-    return local;
+    return getLocalData<Store>(LOCAL_STORES_KEY) || [];
   },
 
   async createStore(store: Partial<Store> & { operator?: string }): Promise<Store> {
@@ -233,21 +303,16 @@ export const api = {
 
   // Expense Types
   async getExpenseTypes(): Promise<ExpenseType[]> {
-    const deletedSet = getDeletedIds();
-    const local = (getLocalData<ExpenseType>(LOCAL_EXP_KEY) || []).filter(e => !deletedSet.has(e.id));
     try {
       const serverData = await fetchJson<ExpenseType[]>(`${BASE_URL}/expense-types`);
       if (Array.isArray(serverData)) {
-        const filteredServer = serverData.filter(e => !deletedSet.has(e.id));
-        const serverIds = new Set(filteredServer.map(e => e.id));
-        const merged = [...filteredServer, ...local.filter(e => !serverIds.has(e.id))];
-        setLocalData(LOCAL_EXP_KEY, merged);
-        return merged;
+        setLocalData(LOCAL_EXP_KEY, serverData);
+        return serverData;
       }
     } catch (err) {
       console.warn('Gagal ambil jenis belanja dari server, menggunakan cache lokal:', err);
     }
-    return local;
+    return getLocalData<ExpenseType>(LOCAL_EXP_KEY) || [];
   },
 
   async createExpenseType(exp: Partial<ExpenseType> & { operator?: string }): Promise<ExpenseType> {
@@ -316,21 +381,16 @@ export const api = {
 
   // Items
   async getItems(): Promise<ItemMaster[]> {
-    const deletedSet = getDeletedIds();
-    const local = (getLocalData<ItemMaster>(LOCAL_ITEMS_KEY) || []).filter(i => !deletedSet.has(i.id));
     try {
       const serverData = await fetchJson<ItemMaster[]>(`${BASE_URL}/items`);
       if (Array.isArray(serverData)) {
-        const filteredServer = serverData.filter(i => !deletedSet.has(i.id));
-        const serverIds = new Set(filteredServer.map(i => i.id));
-        const merged = [...filteredServer, ...local.filter(i => !serverIds.has(i.id))];
-        setLocalData(LOCAL_ITEMS_KEY, merged);
-        return merged;
+        setLocalData(LOCAL_ITEMS_KEY, serverData);
+        return serverData;
       }
     } catch (err) {
       console.warn('Gagal ambil data barang dari server, menggunakan cache lokal:', err);
     }
-    return local;
+    return getLocalData<ItemMaster>(LOCAL_ITEMS_KEY) || [];
   },
 
   async createItem(item: Partial<ItemMaster> & { operator?: string }): Promise<ItemMaster> {
@@ -400,30 +460,29 @@ export const api = {
 
   // Transactions
   async getTransactions(): Promise<Transaction[]> {
-    const deletedSet = getDeletedIds();
-    const local = (getLocalData<Transaction>(LOCAL_TRX_KEY) || []).filter(t => !deletedSet.has(t.id));
     try {
       const serverData = await fetchJson<Transaction[]>(`${BASE_URL}/transactions`);
       if (Array.isArray(serverData)) {
-        const filteredServer = serverData.filter(t => !deletedSet.has(t.id));
-        const serverIds = new Set(filteredServer.map(t => t.id));
-        const merged = [
-          ...filteredServer,
-          ...local.filter(t => !serverIds.has(t.id)),
-        ];
         // Sort descending by date and sequence
-        merged.sort((a, b) => {
+        serverData.sort((a, b) => {
           if (b.tanggalTransaksi !== a.tanggalTransaksi) {
             return b.tanggalTransaksi.localeCompare(a.tanggalTransaksi);
           }
           return (b.nomorUrut || 0) - (a.nomorUrut || 0);
         });
-        setLocalData(LOCAL_TRX_KEY, merged);
-        return merged;
+        setLocalData(LOCAL_TRX_KEY, serverData);
+        return serverData;
       }
     } catch (err) {
       console.warn('Gagal ambil transaksi dari server, menggunakan cache lokal:', err);
     }
+    const local = getLocalData<Transaction>(LOCAL_TRX_KEY) || [];
+    local.sort((a, b) => {
+      if (b.tanggalTransaksi !== a.tanggalTransaksi) {
+        return b.tanggalTransaksi.localeCompare(a.tanggalTransaksi);
+      }
+      return (b.nomorUrut || 0) - (a.nomorUrut || 0);
+    });
     return local;
   },
 

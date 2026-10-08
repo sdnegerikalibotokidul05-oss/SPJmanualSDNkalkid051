@@ -2,7 +2,45 @@ import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
 import { useToast } from '../common/Toast';
 import { SchoolProfile } from '../../types';
-import { Building2, Save, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { Building2, Save, Upload, Trash2, RefreshCw, CheckCircle2, Loader2 } from 'lucide-react';
+
+// Client-side image compressor to ensure fast upload, light storage, and crisp rendering
+function compressImage(file: File, maxDimension = 500, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(e.target?.result as string);
+        ctx.drawImage(img, 0, 0, width, height);
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mime, quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export const SchoolProfileView: React.FC = () => {
   const { profile, updateProfile, isLoading } = useSchool();
@@ -10,6 +48,7 @@ export const SchoolProfileView: React.FC = () => {
 
   const [formData, setFormData] = useState<SchoolProfile>({ ...profile });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Sync state if profile changes
   React.useEffect(() => {
@@ -20,7 +59,7 @@ export const SchoolProfileView: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -29,26 +68,48 @@ export const SchoolProfileView: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setFormData(prev => ({ ...prev, logoUrl: base64 }));
-      showToast('Logo berhasil dimuat. Klik Simpan untuk memperbarui.', 'info');
-    };
-    reader.readAsDataURL(file);
+    try {
+      setIsUploadingLogo(true);
+      const optimizedBase64 = await compressImage(file, 500, 0.85);
+      setFormData(prev => ({ ...prev, logoUrl: optimizedBase64 }));
+      // Immediately save to database and local cache so user never loses it
+      await updateProfile({ logoUrl: optimizedBase64 });
+      showToast('Logo berhasil diupload dan disimpan ke database!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Gagal memproses gambar logo', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
-  const handleRemoveLogo = () => {
-    setFormData(prev => ({ ...prev, logoUrl: '' }));
-    showToast('Logo dihapus. Klik Simpan untuk menerapkan.', 'info');
+  const handleRemoveLogo = async () => {
+    try {
+      setIsUploadingLogo(true);
+      setFormData(prev => ({ ...prev, logoUrl: '' }));
+      await updateProfile({ logoUrl: '' });
+      showToast('Logo dihapus dan perubahan telah disimpan.', 'info');
+    } catch (err: any) {
+      showToast('Gagal menghapus logo', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
-  const handleResetDefaultLogo = () => {
-    setFormData(prev => ({
-      ...prev,
-      logoUrl: '/src/assets/images/logo_sdn_kaliboto_kidul_05_1791253078034.jpg',
-    }));
-    showToast('Logo dikembalikan ke emblem standar.', 'info');
+  const handleResetDefaultLogo = async () => {
+    try {
+      setIsUploadingLogo(true);
+      const defaultEmblem = '/logo.jpg';
+      setFormData(prev => ({
+        ...prev,
+        logoUrl: defaultEmblem,
+      }));
+      await updateProfile({ logoUrl: defaultEmblem });
+      showToast('Logo dikembalikan ke emblem standar dan disimpan.', 'info');
+    } catch (err: any) {
+      showToast('Gagal mereset logo', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +117,7 @@ export const SchoolProfileView: React.FC = () => {
     setIsSaving(true);
     try {
       await updateProfile(formData);
-      showToast('Profil sekolah berhasil disimpan ke database!', 'success');
+      showToast('Profil sekolah dan logo berhasil disimpan ke database!', 'success');
     } catch (err: any) {
       showToast(err.message || 'Gagal menyimpan profil sekolah', 'error');
     } finally {
@@ -88,12 +149,25 @@ export const SchoolProfileView: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Logo Section */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
-          <h2 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">
-            Logo Resmi Sekolah
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+              Logo Resmi Sekolah
+            </h2>
+            {formData.logoUrl && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Logo Aktif & Tersimpan</span>
+              </span>
+            )}
+          </div>
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="w-28 h-36 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center relative shadow-xs">
-              {formData.logoUrl ? (
+              {isUploadingLogo ? (
+                <div className="flex flex-col items-center justify-center gap-2 text-indigo-600">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="text-[10px] font-medium text-slate-500">Menyimpan...</span>
+                </div>
+              ) : formData.logoUrl ? (
                 <img
                   src={formData.logoUrl}
                   alt="Preview Logo"
@@ -106,16 +180,17 @@ export const SchoolProfileView: React.FC = () => {
             </div>
 
             <div className="flex-1 space-y-3">
-              <div className="text-xs text-slate-600">
-                Pilih berkas logo lambang sekolah atau dinas pendidikan. Format PNG atau JPG transparan disarankan.
+              <div className="text-xs text-slate-600 leading-relaxed">
+                Pilih berkas lambang sekolah atau dinas pendidikan (PNG transparan atau JPG). Logo akan otomatis dioptimasi dan disimpan secara permanen ke database sistem.
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <label className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors">
+                <label className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors shadow-xs">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Upload Logo Baru</span>
+                  <span>{isUploadingLogo ? 'Memproses...' : 'Upload Logo Baru'}</span>
                   <input
                     type="file"
                     accept="image/*"
+                    disabled={isUploadingLogo}
                     onChange={handleLogoUpload}
                     className="hidden"
                   />
@@ -124,6 +199,7 @@ export const SchoolProfileView: React.FC = () => {
                 {formData.logoUrl && (
                   <button
                     type="button"
+                    disabled={isUploadingLogo}
                     onClick={handleRemoveLogo}
                     className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
@@ -134,6 +210,7 @@ export const SchoolProfileView: React.FC = () => {
 
                 <button
                   type="button"
+                  disabled={isUploadingLogo}
                   onClick={handleResetDefaultLogo}
                   className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                 >

@@ -298,26 +298,26 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       if (method === 'POST') {
         const body = await parseJsonBody(req);
         
-        // Find monotonic sequence number across existing transactions, deleted IDs, and document sequence
+        // Find monotonic sequence number strictly across existing transactions with TRX- pattern
         let maxSeq = 0;
         for (const t of db.transactions) {
-          if (t.nomorUrut && t.nomorUrut > maxSeq) maxSeq = t.nomorUrut;
-          const match = t.id?.match(/-(\d+)$/);
+          if (t.nomorUrut && t.nomorUrut > maxSeq && t.nomorUrut < 1000000) maxSeq = t.nomorUrut;
+          const match = t.id?.match(/^TRX-\d+-(\d+)$/);
           if (match) {
             const num = parseInt(match[1], 10);
-            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            if (!isNaN(num) && num > maxSeq && num < 1000000) maxSeq = num;
           }
         }
         if (db.deleted_ids && Array.isArray(db.deleted_ids)) {
           for (const delId of db.deleted_ids) {
-            const match = delId?.match(/-(\d+)$/);
+            const match = delId?.match(/^TRX-\d+-(\d+)$/);
             if (match) {
               const num = parseInt(match[1], 10);
-              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+              if (!isNaN(num) && num > maxSeq && num < 1000000) maxSeq = num;
             }
           }
         }
-        if (db.document_sequences?.nextSeqSP && (db.document_sequences.nextSeqSP - 1) > maxSeq) {
+        if (db.document_sequences?.nextSeqSP && (db.document_sequences.nextSeqSP - 1) > maxSeq && (db.document_sequences.nextSeqSP - 1) < 1000000) {
           maxSeq = Math.max(maxSeq, db.document_sequences.nextSeqSP - 1);
         }
         const nextNum = Math.max(maxSeq, db.transactions.length) + 1;
@@ -380,19 +380,19 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
 
         let maxSeq = 0;
         for (const t of db.transactions) {
-          if (t.nomorUrut && t.nomorUrut > maxSeq) maxSeq = t.nomorUrut;
-          const match = t.id?.match(/-(\d+)$/);
+          if (t.nomorUrut && t.nomorUrut > maxSeq && t.nomorUrut < 1000000) maxSeq = t.nomorUrut;
+          const match = t.id?.match(/^TRX-\d+-(\d+)$/);
           if (match) {
             const num = parseInt(match[1], 10);
-            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            if (!isNaN(num) && num > maxSeq && num < 1000000) maxSeq = num;
           }
         }
         if (db.deleted_ids && Array.isArray(db.deleted_ids)) {
           for (const delId of db.deleted_ids) {
-            const match = delId?.match(/-(\d+)$/);
+            const match = delId?.match(/^TRX-\d+-(\d+)$/);
             if (match) {
               const num = parseInt(match[1], 10);
-              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+              if (!isNaN(num) && num > maxSeq && num < 1000000) maxSeq = num;
             }
           }
         }

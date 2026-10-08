@@ -16,10 +16,36 @@ const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
 
 const defaultSeed = getInitialSeedData();
 
+const getInitialProfile = (): SchoolProfile => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('school_db_profile') : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.namaSekolah) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return defaultSeed.school_profile;
+};
+
+const getInitialLetterhead = (): SchoolLetterhead => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('school_db_letterhead') : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.namaProvinsi) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return defaultSeed.school_letterhead;
+};
+
 export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [profile, setProfile] = useState<SchoolProfile>(defaultSeed.school_profile);
-  const [letterhead, setLetterhead] = useState<SchoolLetterhead>(defaultSeed.school_letterhead);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<SchoolProfile>(getInitialProfile);
+  const [letterhead, setLetterhead] = useState<SchoolLetterhead>(getInitialLetterhead);
+  const [isLoading, setIsLoading] = useState(false);
 
   const refreshSchoolData = useCallback(async () => {
     try {
@@ -27,53 +53,81 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         api.getSchoolProfile(),
         api.getSchoolLetterhead(),
       ]);
-      if (profData) setProfile(profData);
-      if (letData) setLetterhead(letData);
+      if (profData && profData.namaSekolah) {
+        setProfile(profData);
+        try {
+          localStorage.setItem('school_db_profile', JSON.stringify(profData));
+        } catch {
+          // ignore
+        }
+      }
+      if (letData) {
+        setLetterhead(letData);
+        try {
+          localStorage.setItem('school_db_letterhead', JSON.stringify(letData));
+        } catch {
+          // ignore
+        }
+      }
     } catch (err) {
       console.warn('Could not fetch school data from API, using cached/seed:', err);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // Inisialisasi awal profil sekolah dan sinkronkan dengan API jika tersedia
-    setProfile(prev => ({
-      ...prev,
-      namaSekolah: 'SD NEGERI KALIBOTO KIDUL 05',
-      logoUrl: prev.logoUrl || '/logo.jpg',
-    }));
     refreshSchoolData();
   }, [refreshSchoolData]);
 
   const updateProfile = async (data: Partial<SchoolProfile>) => {
+    const updated = { ...profile, ...data, updatedAt: new Date().toISOString() };
+    setProfile(updated as SchoolProfile);
+    try {
+      localStorage.setItem('school_db_profile', JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
     try {
       const res = await api.updateSchoolProfile(data);
-      if (res) {
+      if (res && res.namaSekolah) {
         setProfile(res);
+        try {
+          localStorage.setItem('school_db_profile', JSON.stringify(res));
+        } catch {
+          // ignore
+        }
         return res;
       }
     } catch (err) {
-      console.warn('Gagal simpan ke API, memperbarui state lokal:', err);
+      console.warn('Gagal simpan ke API, state lokal tetap diperbarui:', err);
     }
-    const fallback = { ...profile, ...data, updatedAt: new Date().toISOString() };
-    setProfile(fallback as SchoolProfile);
-    return fallback as SchoolProfile;
+    return updated as SchoolProfile;
   };
 
   const updateLetterhead = async (data: Partial<SchoolLetterhead>) => {
+    const updated = { ...letterhead, ...data, updatedAt: new Date().toISOString() };
+    setLetterhead(updated as SchoolLetterhead);
+    try {
+      localStorage.setItem('school_db_letterhead', JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
     try {
       const res = await api.updateSchoolLetterhead(data);
       if (res) {
         setLetterhead(res);
+        try {
+          localStorage.setItem('school_db_letterhead', JSON.stringify(res));
+        } catch {
+          // ignore
+        }
         return res;
       }
     } catch (err) {
-      console.warn('Gagal simpan kop surat ke API, memperbarui state lokal:', err);
+      console.warn('Gagal simpan kop surat ke API, state lokal tetap diperbarui:', err);
     }
-    const fallback = { ...letterhead, ...data, updatedAt: new Date().toISOString() };
-    setLetterhead(fallback as SchoolLetterhead);
-    return fallback as SchoolLetterhead;
+    return updated as SchoolLetterhead;
   };
 
   return (

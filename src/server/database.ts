@@ -41,13 +41,6 @@ function sanitizeWithDeletedIds(db: DatabaseSchema): DatabaseSchema {
   if (!db.deleted_ids) {
     db.deleted_ids = [];
   }
-  if (db.deleted_ids.length > 0) {
-    const deletedSet = new Set(db.deleted_ids);
-    db.transactions = (db.transactions || []).filter(t => !deletedSet.has(t.id));
-    db.stores = (db.stores || []).filter(s => !deletedSet.has(s.id));
-    db.items = (db.items || []).filter(i => !deletedSet.has(i.id));
-    db.expense_types = (db.expense_types || []).filter(e => !deletedSet.has(e.id));
-  }
   return db;
 }
 
@@ -121,6 +114,9 @@ export function markAsDeleted(id: string): void {
   }
   if (!db.deleted_ids.includes(id)) {
     db.deleted_ids.push(id);
+    if (db.deleted_ids.length > 100) {
+      db.deleted_ids = db.deleted_ids.slice(-100);
+    }
   }
   db.transactions = (db.transactions || []).filter(t => t.id !== id);
   db.stores = (db.stores || []).filter(s => s.id !== id);
