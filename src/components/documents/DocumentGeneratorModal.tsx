@@ -1112,7 +1112,7 @@ const RekapDoc: React.FC<{ trx: Transaction; profile: any }> = ({ trx, profile }
         </tbody>
       </table>
 
-      {/* Items Table with Tax Breakdown (PPN & PPh 23) */}
+      {/* Items Table with Unified Tax (PPN & PPh 23 digabung 1 kolom) */}
       <table className="w-full text-[8.5pt] border-collapse border border-black my-2">
         <thead>
           <tr className="bg-slate-100 font-bold text-center">
@@ -1123,32 +1123,42 @@ const RekapDoc: React.FC<{ trx: Transaction; profile: any }> = ({ trx, profile }
             <th className="border border-black py-1 px-2 text-right w-20">Harga Final</th>
             <th className="border border-black py-1 px-2 text-right w-22">Total Belanja</th>
             <th className="border border-black py-1 px-2 text-right w-20">DPP</th>
-            <th className="border border-black py-1 px-2 text-right w-20">PPN 11%</th>
-            <th className="border border-black py-1 px-2 text-right w-20">PPh 23</th>
+            <th className="border border-black py-1 px-2 text-right w-24">Pajak (PPN & PPh 23)</th>
             <th className="border border-black py-1 px-1.5 w-24 text-center">Opsi Pajak</th>
           </tr>
         </thead>
         <tbody>
-          {trx.items.map((item, idx) => (
-            <tr key={item.id || idx}>
-              <td className="border border-black py-1 px-1.5 text-center">{idx + 1}</td>
-              <td className="border border-black py-1 px-2">{item.uraian}</td>
-              <td className="border border-black py-1 px-1 text-center">{item.volume}</td>
-              <td className="border border-black py-1 px-1 text-center">{item.satuan}</td>
-              <td className="border border-black py-1 px-2 text-right">{formatRupiah(item.harga)}</td>
-              <td className="border border-black py-1 px-2 text-right font-medium">{formatRupiah(item.jumlah)}</td>
-              <td className="border border-black py-1 px-2 text-right text-slate-700">{formatRupiah(item.dpp)}</td>
-              <td className="border border-black py-1 px-2 text-right text-indigo-900 font-medium">
-                {item.ppn && item.ppn > 0 ? formatRupiah(item.ppn) : '-'}
-              </td>
-              <td className="border border-black py-1 px-2 text-right text-amber-900 font-medium">
-                {item.pph23 && item.pph23 > 0 ? formatRupiah(item.pph23) : '-'}
-              </td>
-              <td className="border border-black py-1 px-1.5 text-center text-[8pt] text-slate-700">
-                {getTaxLabel(item.pajak)}
-              </td>
-            </tr>
-          ))}
+          {trx.items.map((item, idx) => {
+            const itemPajak = (item.ppn || 0) + (item.pph23 || 0);
+            return (
+              <tr key={item.id || idx}>
+                <td className="border border-black py-1 px-1.5 text-center">{idx + 1}</td>
+                <td className="border border-black py-1 px-2">{item.uraian}</td>
+                <td className="border border-black py-1 px-1 text-center">{item.volume}</td>
+                <td className="border border-black py-1 px-1 text-center">{item.satuan}</td>
+                <td className="border border-black py-1 px-2 text-right">{formatRupiah(item.harga)}</td>
+                <td className="border border-black py-1 px-2 text-right font-medium">{formatRupiah(item.jumlah)}</td>
+                <td className="border border-black py-1 px-2 text-right text-slate-700">{formatRupiah(item.dpp)}</td>
+                <td className="border border-black py-1 px-2 text-right text-emerald-950 font-medium">
+                  {itemPajak > 0 ? (
+                    <div>
+                      <span className="font-semibold">{formatRupiah(itemPajak)}</span>
+                      {(item.ppn || 0) > 0 && (item.pph23 || 0) > 0 ? (
+                        <span className="block text-[6.5pt] text-slate-500 leading-tight">
+                          (PPN: {formatRupiah(item.ppn!)} + PPh23: {formatRupiah(item.pph23!)})
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">-</span>
+                  )}
+                </td>
+                <td className="border border-black py-1 px-1.5 text-center text-[8pt] text-slate-700">
+                  {getTaxLabel(item.pajak)}
+                </td>
+              </tr>
+            );
+          })}
           <tr className="font-bold bg-slate-50">
             <td colSpan={5} className="border border-black py-1 px-2 text-right uppercase">
               Total Akumulasi
@@ -1159,11 +1169,8 @@ const RekapDoc: React.FC<{ trx: Transaction; profile: any }> = ({ trx, profile }
             <td className="border border-black py-1 px-2 text-right">
               {formatRupiah(trx.totalDPP)}
             </td>
-            <td className="border border-black py-1 px-2 text-right text-indigo-900 font-bold">
-              {formatRupiah(trx.totalPPN || trx.items.reduce((acc, it) => acc + (it.ppn || 0), 0))}
-            </td>
-            <td className="border border-black py-1 px-2 text-right text-amber-900 font-bold">
-              {formatRupiah(trx.totalPPh23 || trx.items.reduce((acc, it) => acc + (it.pph23 || 0), 0))}
+            <td className="border border-black py-1 px-2 text-right text-emerald-900 font-bold">
+              {formatRupiah(trx.totalPajak || ((trx.totalPPN || 0) + (trx.totalPPh23 || 0)))}
             </td>
             <td className="border border-black py-1 px-1 text-center text-[7.5pt] text-slate-600">
               {trx.statusPajakSummary}

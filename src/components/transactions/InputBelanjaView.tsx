@@ -841,22 +841,20 @@ export const InputBelanjaView: React.FC<InputBelanjaViewProps> = ({
               <span>Dasar Pengenaan Pajak (DPP):</span>
               <span className="font-mono text-white tabular-nums">{formatRupiah(summary.totalDPP)}</span>
             </div>
-            {summary.totalPPN > 0 && (
-              <div className="flex justify-between text-indigo-300">
-                <span>Komponen PPN (11% UU HPP):</span>
-                <span className="font-mono tabular-nums">{formatRupiah(summary.totalPPN)}</span>
-              </div>
-            )}
-            {summary.totalPPh23 > 0 && (
-              <div className="flex justify-between text-amber-300">
-                <span>Komponen Potongan PPh 23:</span>
-                <span className="font-mono tabular-nums">{formatRupiah(summary.totalPPh23)}</span>
-              </div>
-            )}
             <div className="flex justify-between font-semibold pt-1 border-t border-slate-800 text-white">
-              <span>Total Komponen Pajak Terkandung:</span>
+              <span>Pajak (PPN & PPh 23):</span>
               <span className="font-mono text-emerald-400 tabular-nums">{formatRupiah(summary.totalPajak)}</span>
             </div>
+            {(summary.totalPPN > 0 || summary.totalPPh23 > 0) && (
+              <div className="flex justify-between text-[11px] text-slate-400 pl-2">
+                <span>Rincian Komponen:</span>
+                <span className="font-mono">
+                  {summary.totalPPN > 0 && `PPN: ${formatRupiah(summary.totalPPN)}`}
+                  {summary.totalPPN > 0 && summary.totalPPh23 > 0 && ' · '}
+                  {summary.totalPPh23 > 0 && `PPh 23: ${formatRupiah(summary.totalPPh23)}`}
+                </span>
+              </div>
+            )}
             <div className="text-[10px] text-slate-400 pt-1">
               * Ketentuan Pemerintah: Pajak dihitung dari DPP dan tidak menambahkan total nilai akhir belanja.
             </div>

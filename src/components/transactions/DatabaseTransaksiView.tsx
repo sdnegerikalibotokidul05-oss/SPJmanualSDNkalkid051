@@ -519,22 +519,20 @@ export const DatabaseTransaksiView: React.FC<DatabaseTransaksiViewProps> = ({
                     <span className="text-slate-400">Dasar Pengenaan Pajak (DPP):</span>
                     <span>{formatRupiah(detailTrx.totalDPP)}</span>
                   </div>
-                  {(detailTrx.totalPPN || detailTrx.items.reduce((s, it) => s + (it.ppn || 0), 0)) > 0 && (
-                    <div className="text-[11px] flex justify-between text-indigo-300">
-                      <span className="text-slate-400">Komponen PPN (11%):</span>
-                      <span>{formatRupiah(detailTrx.totalPPN || detailTrx.items.reduce((s, it) => s + (it.ppn || 0), 0))}</span>
-                    </div>
-                  )}
-                  {(detailTrx.totalPPh23 || detailTrx.items.reduce((s, it) => s + (it.pph23 || 0), 0)) > 0 && (
-                    <div className="text-[11px] flex justify-between text-amber-300">
-                      <span className="text-slate-400">Komponen PPh 23:</span>
-                      <span>{formatRupiah(detailTrx.totalPPh23 || detailTrx.items.reduce((s, it) => s + (it.pph23 || 0), 0))}</span>
-                    </div>
-                  )}
-                  <div className="text-[11px] flex justify-between font-semibold text-white pt-1 border-t border-slate-800">
-                    <span className="text-slate-400">Total Komponen Pajak:</span>
-                    <span className="text-emerald-400">{formatRupiah(detailTrx.totalPajak)}</span>
+                  <div className="text-[11px] flex justify-between font-semibold text-emerald-400 pt-1 border-t border-slate-800">
+                    <span className="text-slate-300">Pajak (PPN & PPh 23):</span>
+                    <span>{formatRupiah(detailTrx.totalPajak)}</span>
                   </div>
+                  {((detailTrx.totalPPN || 0) > 0 || (detailTrx.totalPPh23 || 0) > 0) && (
+                    <div className="text-[10px] flex justify-between text-slate-400 pl-2">
+                      <span>Rincian:</span>
+                      <span>
+                        {(detailTrx.totalPPN || 0) > 0 && `PPN: ${formatRupiah(detailTrx.totalPPN || 0)}`}
+                        {(detailTrx.totalPPN || 0) > 0 && (detailTrx.totalPPh23 || 0) > 0 && ' · '}
+                        {(detailTrx.totalPPh23 || 0) > 0 && `PPh 23: ${formatRupiah(detailTrx.totalPPh23 || 0)}`}
+                      </span>
+                    </div>
+                  )}
                   <div className="text-[10px] text-slate-400 pt-1">
                     User Pembuat: {detailTrx.userPembuat}
                   </div>

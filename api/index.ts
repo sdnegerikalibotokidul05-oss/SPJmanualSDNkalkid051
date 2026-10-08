@@ -22,9 +22,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       const remainingQuery = parsed.searchParams.toString();
       const cleanRoute = routeParam.startsWith('/') ? routeParam : `/${routeParam}`;
       targetUrl = `/api${cleanRoute}${remainingQuery ? `?${remainingQuery}` : ''}`;
-    } else if (forwardedUri && forwardedUri.startsWith('/api')) {
+    } else if (targetUrl.startsWith('/api/') && targetUrl.length > 5) {
+      // Direct path like /api/transactions
+    } else if (forwardedUri && forwardedUri.startsWith('/api/') && forwardedUri.length > 5) {
       targetUrl = forwardedUri;
-    } else if (matchedPath && matchedPath.startsWith('/api')) {
+    } else if (matchedPath && matchedPath.startsWith('/api/') && matchedPath.length > 5) {
       targetUrl = matchedPath;
     } else if (!targetUrl.startsWith('/api')) {
       targetUrl = `/api${targetUrl.startsWith('/') ? '' : '/'}${targetUrl}`;

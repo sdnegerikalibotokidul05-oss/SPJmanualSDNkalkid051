@@ -287,8 +287,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
         </div>
 
-        {/* Aggregated Quick Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+        {/* Aggregated Quick Metrics (Pajak PPN & PPh 23 Digabung) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
             <span className="text-[10px] text-slate-500 block">Total Nilai Belanja</span>
             <span className="text-sm font-bold font-mono text-slate-900 tabular-nums">
@@ -297,30 +297,26 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <span className="text-[10px] text-slate-500 block">DPP (Dasar Pajak)</span>
+            <span className="text-[10px] text-slate-500 block">DPP (Dasar Pengenaan Pajak)</span>
             <span className="text-sm font-bold font-mono text-slate-900 tabular-nums">
               {formatRupiah(totalDPP)}
             </span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <span className="text-[10px] text-slate-500 block">PPN 11% (UU HPP)</span>
-            <span className="text-sm font-bold font-mono text-indigo-700 tabular-nums">
-              {formatRupiah(totalPPN)}
-            </span>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <span className="text-[10px] text-slate-500 block">Potongan PPh 23</span>
-            <span className="text-sm font-bold font-mono text-amber-700 tabular-nums">
-              {formatRupiah(totalPPh23)}
-            </span>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <span className="text-[10px] text-slate-500 block">Total Komponen Pajak</span>
+            <span className="text-[10px] text-slate-500 block">Pajak (PPN & PPh 23)</span>
             <span className="text-sm font-bold font-mono text-emerald-700 tabular-nums">
               {formatRupiah(totalPajak)}
+            </span>
+            <span className="text-[9px] text-slate-500 block mt-0.5">
+              PPN: {formatRupiah(totalPPN)} · PPh 23: {formatRupiah(totalPPh23)}
+            </span>
+          </div>
+
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <span className="text-[10px] text-slate-500 block">Total Transaksi</span>
+            <span className="text-sm font-bold font-mono text-indigo-700 tabular-nums">
+              {filteredTrx.length} Transaksi
             </span>
           </div>
         </div>
@@ -355,7 +351,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               </div>
             </div>
 
-            {/* Content Table 1: Rekap Belanja */}
+            {/* Content Table 1: Rekap Belanja (Tabel Pajak PPN & PPh 23 Digabung) */}
             {reportType === 'rekap-belanja' && (
               <div className="space-y-4">
                 <table className="w-full text-[8.5pt] border-collapse border border-black my-2">
@@ -367,15 +363,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       <th className="border border-black py-1 px-2 text-left">Jenis Belanja</th>
                       <th className="border border-black py-1 px-2 w-24 text-right">Total Belanja</th>
                       <th className="border border-black py-1 px-2 w-20 text-right">DPP</th>
-                      <th className="border border-black py-1 px-2 w-18 text-right">PPN 11%</th>
-                      <th className="border border-black py-1 px-2 w-18 text-right">PPh 23</th>
-                      <th className="border border-black py-1 px-2 text-center w-24">Pajak</th>
+                      <th className="border border-black py-1 px-2 w-24 text-right">Pajak (PPN & PPh 23)</th>
+                      <th className="border border-black py-1 px-2 text-center w-24">Status Pajak</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTrx.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="border border-black py-6 text-center text-slate-500 italic">
+                        <td colSpan={8} className="border border-black py-6 text-center text-slate-500 italic">
                           Tidak ada transaksi belanja pada periode yang dipilih
                         </td>
                       </tr>
@@ -383,6 +378,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       filteredTrx.map((trx, idx) => {
                         const trxPPN = trx.totalPPN || trx.items.reduce((s, it) => s + (it.ppn || 0), 0);
                         const trxPPh23 = trx.totalPPh23 || trx.items.reduce((s, it) => s + (it.pph23 || 0), 0);
+                        const trxPajak = trxPPN + trxPPh23;
                         return (
                           <tr key={trx.id}>
                             <td className="border border-black py-1 px-1.5 text-center">{idx + 1}</td>
@@ -393,11 +389,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                             <td className="border border-black py-1 px-2 text-slate-700">{trx.expenseTypeName}</td>
                             <td className="border border-black py-1 px-2 text-right font-medium">{formatRupiah(trx.totalTransaksi)}</td>
                             <td className="border border-black py-1 px-2 text-right text-slate-700">{formatRupiah(trx.totalDPP)}</td>
-                            <td className="border border-black py-1 px-2 text-right text-indigo-900">
-                              {trxPPN > 0 ? formatRupiah(trxPPN) : '-'}
-                            </td>
-                            <td className="border border-black py-1 px-2 text-right text-amber-900">
-                              {trxPPh23 > 0 ? formatRupiah(trxPPh23) : '-'}
+                            <td className="border border-black py-1 px-2 text-right text-emerald-950 font-medium">
+                              {trxPajak > 0 ? (
+                                <div>
+                                  <span className="font-semibold">{formatRupiah(trxPajak)}</span>
+                                  {trxPPN > 0 && trxPPh23 > 0 ? (
+                                    <span className="block text-[6.5pt] text-slate-500 leading-tight">
+                                      (PPN: {formatRupiah(trxPPN)} + PPh23: {formatRupiah(trxPPh23)})
+                                    </span>
+                                  ) : null}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
                             </td>
                             <td className="border border-black py-1 px-2 text-center text-[7.5pt] text-slate-600">
                               {trx.statusPajakSummary}
@@ -416,14 +420,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       <td className="border border-black py-1.5 px-2 text-right">
                         {formatRupiah(totalDPP)}
                       </td>
-                      <td className="border border-black py-1.5 px-2 text-right text-indigo-900">
-                        {formatRupiah(totalPPN)}
-                      </td>
-                      <td className="border border-black py-1.5 px-2 text-right text-amber-900">
-                        {formatRupiah(totalPPh23)}
-                      </td>
-                      <td className="border border-black py-1.5 px-2 text-center text-[7.5pt]">
+                      <td className="border border-black py-1.5 px-2 text-right text-emerald-900 font-bold">
                         {formatRupiah(totalPajak)}
+                      </td>
+                      <td className="border border-black py-1.5 px-2 text-center text-[7.5pt] text-slate-600">
+                        {filteredTrx.length} Transaksi
                       </td>
                     </tr>
                   </tbody>
