@@ -30,11 +30,26 @@ function ensureDbFile(): void {
       }
     }
     const seed = getInitialSeedData();
+    seed.deleted_ids = [];
     fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), 'utf-8');
   }
 }
 
 let memoryCache: DatabaseSchema | null = null;
+
+function sanitizeWithDeletedIds(db: DatabaseSchema): DatabaseSchema {
+  if (!db.deleted_ids) {
+    db.deleted_ids = [];
+  }
+  if (db.deleted_ids.length > 0) {
+    const deletedSet = new Set(db.deleted_ids);
+    db.transactions = (db.transactions || []).filter(t => !deletedSet.has(t.id));
+    db.stores = (db.stores || []).filter(s => !deletedSet.has(s.id));
+    db.items = (db.items || []).filter(i => !deletedSet.has(i.id));
+    db.expense_types = (db.expense_types || []).filter(e => !deletedSet.has(e.id));
+  }
+  return db;
+}
 
 export function readDB(): DatabaseSchema {
   if (memoryCache) {
@@ -43,12 +58,13 @@ export function readDB(): DatabaseSchema {
   ensureDbFile();
   try {
     const content = fs.readFileSync(DB_FILE, 'utf-8');
-    const parsed = JSON.parse(content);
-    memoryCache = parsed;
-    return parsed;
+    const parsed = JSON.parse(content) as DatabaseSchema;
+    memoryCache = sanitizeWithDeletedIds(parsed);
+    return memoryCache;
   } catch (err) {
     console.error('Error reading database file, repairing with seed:', err);
     const seed = getInitialSeedData();
+    seed.deleted_ids = [];
     memoryCache = seed;
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(seed, null, 2), 'utf-8');
@@ -60,13 +76,57 @@ export function readDB(): DatabaseSchema {
 }
 
 export function writeDB(db: DatabaseSchema): void {
+  // Ensure deleted_ids array is always initialized
+  if (!db.deleted_ids) {
+    db.deleted_ids = [];
+  }
   memoryCache = db;
   ensureDbFile();
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
-  } catch (err) {
-    console.warn('Failed to write database file to disk:', err);
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+    fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DB_FILE);
+  } catch {
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+    } catch (err) {
+      console.warn('Failed to write database file to disk:', err);
+    }
   }
+
+  // Also sync bundled file if not on Vercel to preserve changes across rebuilds
+  if (!isVercel && fs.existsSync(path.dirname(BUNDLED_DB_FILE))) {
+    try {
+      if (DB_FILE !== BUNDLED_DB_FILE) {
+        fs.writeFileSync(BUNDLED_DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export function unmarkDeleted(id: string): void {
+  const db = readDB();
+  if (db.deleted_ids && db.deleted_ids.includes(id)) {
+    db.deleted_ids = db.deleted_ids.filter(d => d !== id);
+    writeDB(db);
+  }
+}
+
+export function markAsDeleted(id: string): void {
+  const db = readDB();
+  if (!db.deleted_ids) {
+    db.deleted_ids = [];
+  }
+  if (!db.deleted_ids.includes(id)) {
+    db.deleted_ids.push(id);
+  }
+  db.transactions = (db.transactions || []).filter(t => t.id !== id);
+  db.stores = (db.stores || []).filter(s => s.id !== id);
+  db.items = (db.items || []).filter(i => i.id !== id);
+  db.expense_types = (db.expense_types || []).filter(e => e.id !== id);
+  writeDB(db);
 }
 
 export function recordAuditLog(user: string, aktivitas: string, idData: string, keterangan: string): void {

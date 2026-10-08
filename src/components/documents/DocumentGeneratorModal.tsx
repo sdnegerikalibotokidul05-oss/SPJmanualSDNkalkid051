@@ -1112,68 +1112,93 @@ const RekapDoc: React.FC<{ trx: Transaction; profile: any }> = ({ trx, profile }
         </tbody>
       </table>
 
-      {/* Items Table with Unified Tax (PPN & PPh 23 digabung 1 kolom) */}
-      <table className="w-full text-[8.5pt] border-collapse border border-black my-2">
+      {/* Items Table matching mockup: No | Uraian Barang / Jasa | Vol | Satuan | Harga Final | Total Belanja | DPP | Pajak */}
+      <table className="w-full text-[9pt] border-collapse border border-black my-2">
         <thead>
-          <tr className="bg-slate-100 font-bold text-center">
-            <th className="border border-black py-1 px-1.5 w-7">No</th>
-            <th className="border border-black py-1 px-2 text-left">Uraian Barang / Jasa</th>
-            <th className="border border-black py-1 px-1 w-10">Vol</th>
-            <th className="border border-black py-1 px-1 w-14">Satuan</th>
-            <th className="border border-black py-1 px-2 text-right w-20">Harga Final</th>
-            <th className="border border-black py-1 px-2 text-right w-22">Total Belanja</th>
-            <th className="border border-black py-1 px-2 text-right w-20">DPP</th>
-            <th className="border border-black py-1 px-2 text-right w-24">Pajak (PPN & PPh 23)</th>
-            <th className="border border-black py-1 px-1.5 w-24 text-center">Opsi Pajak</th>
+          <tr className="bg-slate-50 font-bold">
+            <th className="border border-black py-2 px-1.5 w-8 text-center">No</th>
+            <th className="border border-black py-2 px-2 text-left">Uraian Barang / Jasa</th>
+            <th className="border border-black py-2 px-1 w-12 text-center bg-slate-100">Vol</th>
+            <th className="border border-black py-2 px-2 w-16 text-left">Satuan</th>
+            <th className="border border-black py-2 px-2 text-left w-24">Harga Final</th>
+            <th className="border border-black py-2 px-2 text-left w-28">Total Belanja</th>
+            <th className="border border-black py-2 px-2 text-left w-24">DPP</th>
+            <th className="border border-black py-2 px-2.5 text-left w-32">Pajak</th>
           </tr>
         </thead>
         <tbody>
           {trx.items.map((item, idx) => {
-            const itemPajak = (item.ppn || 0) + (item.pph23 || 0);
+            const hasPPN = (item.ppn || 0) > 0;
+            const hasPPh23 = (item.pph23 || 0) > 0;
+
+            let pphRateLabel = 'PPh 23 4%';
+            if (item.pajak === 'PPH23_3' || item.pajak === 'PPH23_3_PPN') {
+              pphRateLabel = 'PPh 23 3%';
+            } else if (item.pajak === 'PPH23_4' || item.pajak === 'PPH23_4_PPN' || item.pajak === 'PPH23_PPN') {
+              pphRateLabel = 'PPh 23 4%';
+            }
+
             return (
               <tr key={item.id || idx}>
-                <td className="border border-black py-1 px-1.5 text-center">{idx + 1}</td>
-                <td className="border border-black py-1 px-2">{item.uraian}</td>
-                <td className="border border-black py-1 px-1 text-center">{item.volume}</td>
-                <td className="border border-black py-1 px-1 text-center">{item.satuan}</td>
-                <td className="border border-black py-1 px-2 text-right">{formatRupiah(item.harga)}</td>
-                <td className="border border-black py-1 px-2 text-right font-medium">{formatRupiah(item.jumlah)}</td>
-                <td className="border border-black py-1 px-2 text-right text-slate-700">{formatRupiah(item.dpp)}</td>
-                <td className="border border-black py-1 px-2 text-right text-emerald-950 font-medium">
-                  {itemPajak > 0 ? (
-                    <div>
-                      <span className="font-semibold">{formatRupiah(itemPajak)}</span>
-                      {(item.ppn || 0) > 0 && (item.pph23 || 0) > 0 ? (
-                        <span className="block text-[6.5pt] text-slate-500 leading-tight">
-                          (PPN: {formatRupiah(item.ppn!)} + PPh23: {formatRupiah(item.pph23!)})
-                        </span>
-                      ) : null}
+                <td className="border border-black py-2 px-1.5 text-center">{idx + 1}</td>
+                <td className="border border-black py-2 px-2">{item.uraian}</td>
+                <td className="border border-black py-2 px-1 text-center bg-slate-100/70">{item.volume}</td>
+                <td className="border border-black py-2 px-2">{item.satuan}</td>
+                <td className="border border-black py-2 px-2 text-left whitespace-nowrap">{formatRupiah(item.harga)}</td>
+                <td className="border border-black py-2 px-2 text-left whitespace-nowrap font-medium">{formatRupiah(item.jumlah)}</td>
+                <td className="border border-black py-2 px-2 text-left whitespace-nowrap text-slate-800">{formatRupiah(item.dpp)}</td>
+                <td className="border border-black py-2 px-2.5 text-left align-top">
+                  {hasPPN || hasPPh23 ? (
+                    <div className="space-y-2 text-[8.5pt] leading-tight">
+                      {hasPPN && (
+                        <div>
+                          <div className="font-semibold text-slate-800">PPn 11% :</div>
+                          <div className="font-normal text-slate-900">{formatRupiah(item.ppn!)}</div>
+                        </div>
+                      )}
+                      {hasPPh23 && (
+                        <div>
+                          <div className="font-semibold text-slate-800">{pphRateLabel} :</div>
+                          <div className="font-normal text-slate-900">{formatRupiah(item.pph23!)}</div>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <span className="text-slate-400">-</span>
+                    <span className="text-slate-500">-</span>
                   )}
-                </td>
-                <td className="border border-black py-1 px-1.5 text-center text-[8pt] text-slate-700">
-                  {getTaxLabel(item.pajak)}
                 </td>
               </tr>
             );
           })}
           <tr className="font-bold bg-slate-50">
-            <td colSpan={5} className="border border-black py-1 px-2 text-right uppercase">
+            <td colSpan={5} className="border border-black py-2 px-2 text-right uppercase">
               Total Akumulasi
             </td>
-            <td className="border border-black py-1 px-2 text-right font-bold">
+            <td className="border border-black py-2 px-2 text-left font-bold whitespace-nowrap">
               {formatRupiah(trx.totalTransaksi)}
             </td>
-            <td className="border border-black py-1 px-2 text-right">
+            <td className="border border-black py-2 px-2 text-left font-bold whitespace-nowrap">
               {formatRupiah(trx.totalDPP)}
             </td>
-            <td className="border border-black py-1 px-2 text-right text-emerald-900 font-bold">
-              {formatRupiah(trx.totalPajak || ((trx.totalPPN || 0) + (trx.totalPPh23 || 0)))}
-            </td>
-            <td className="border border-black py-1 px-1 text-center text-[7.5pt] text-slate-600">
-              {trx.statusPajakSummary}
+            <td className="border border-black py-2 px-2.5 text-left font-bold align-top">
+              {(trx.totalPPN || 0) > 0 || (trx.totalPPh23 || 0) > 0 ? (
+                <div className="space-y-1.5 text-[8.5pt] leading-tight">
+                  {(trx.totalPPN || 0) > 0 && (
+                    <div>
+                      <div className="font-semibold text-slate-800">PPn 11% :</div>
+                      <div className="font-normal">{formatRupiah(trx.totalPPN || 0)}</div>
+                    </div>
+                  )}
+                  {(trx.totalPPh23 || 0) > 0 && (
+                    <div>
+                      <div className="font-semibold text-slate-800">PPh 23 :</div>
+                      <div className="font-normal">{formatRupiah(trx.totalPPh23 || 0)}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                '-'
+              )}
             </td>
           </tr>
         </tbody>

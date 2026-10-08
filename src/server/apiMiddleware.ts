@@ -6,6 +6,8 @@ import {
   updateCredentials,
   recordAuditLog,
   getAndIncrementSequences,
+  markAsDeleted,
+  unmarkDeleted,
 } from './database.ts';
 import { getInitialSeedData } from '../utils/seedData.ts';
 import { Store, ExpenseType, ItemMaster, Transaction } from '../types/index.ts';
@@ -35,15 +37,19 @@ function sendJson(res: ServerResponse, statusCode: number, data: any) {
 }
 
 export async function handleApiRequest(req: IncomingMessage, res: ServerResponse, next?: () => void) {
-  const url = req.url || '';
-  if (!url.startsWith('/api/')) {
-    if (next) return next();
-    return;
+  const rawUrl = req.url || '';
+  const parsedUrl = new URL(rawUrl, 'http://localhost');
+  let pathname = parsedUrl.pathname;
+  if (!pathname.startsWith('/api')) {
+    pathname = `/api${pathname.startsWith('/') ? '' : '/'}${pathname}`;
+  }
+
+  // Only handle if it's an API route or if next isn't provided
+  if (!rawUrl.startsWith('/api') && next && !rawUrl.startsWith('/api/')) {
+    // Check if it's an API route mounted by express router
   }
 
   const method = req.method || 'GET';
-  const parsedUrl = new URL(url, 'http://localhost');
-  const pathname = parsedUrl.pathname;
 
   try {
     // 1. AUTH ROUTES
@@ -132,8 +138,10 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       }
       if (method === 'POST') {
         const body = await parseJsonBody(req);
+        const storeId = body.id || `store-${Date.now()}`;
+        unmarkDeleted(storeId);
         const newStore: Store = {
-          id: `store-${Date.now()}`,
+          id: storeId,
           nomorUrut: (db.stores.length > 0 ? Math.max(...db.stores.map(s => s.nomorUrut || 0)) : 0) + 1,
           namaPemilik: body.namaPemilik || '',
           namaToko: body.namaToko || '',
@@ -154,21 +162,25 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       const storeId = pathname.replace('/api/stores/', '');
       const db = readDB();
       const idx = db.stores.findIndex(s => s.id === storeId);
+
+      if (method === 'DELETE') {
+        markAsDeleted(storeId);
+        if (idx !== -1) {
+          const deleted = db.stores[idx];
+          recordAuditLog('admin', 'Hapus Data Toko', storeId, `Toko ${deleted.namaToko} dihapus dari master`);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
       if (idx === -1) return sendJson(res, 404, { error: 'Toko tidak ditemukan' });
 
       if (method === 'PUT') {
         const body = await parseJsonBody(req);
+        unmarkDeleted(storeId);
         db.stores[idx] = { ...db.stores[idx], ...body, updatedAt: new Date().toISOString() };
         writeDB(db);
         recordAuditLog(body.operator || 'admin', 'Ubah Data Toko', storeId, `Data toko ${db.stores[idx].namaToko} diubah`);
         return sendJson(res, 200, db.stores[idx]);
-      }
-
-      if (method === 'DELETE') {
-        const deleted = db.stores.splice(idx, 1)[0];
-        writeDB(db);
-        recordAuditLog('admin', 'Hapus Data Toko', storeId, `Toko ${deleted.namaToko} dihapus dari master`);
-        return sendJson(res, 200, { success: true });
       }
     }
 
@@ -180,8 +192,10 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       }
       if (method === 'POST') {
         const body = await parseJsonBody(req);
+        const expId = body.id || `exp-${Date.now()}`;
+        unmarkDeleted(expId);
         const newExp: ExpenseType = {
-          id: `exp-${Date.now()}`,
+          id: expId,
           namaJenisBelanja: body.namaJenisBelanja || '',
           keterangan: body.keterangan || '',
           statusAktif: body.statusAktif ?? true,
@@ -199,21 +213,25 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       const expId = pathname.replace('/api/expense-types/', '');
       const db = readDB();
       const idx = db.expense_types.findIndex(e => e.id === expId);
+
+      if (method === 'DELETE') {
+        markAsDeleted(expId);
+        if (idx !== -1) {
+          const deleted = db.expense_types[idx];
+          recordAuditLog('admin', 'Hapus Jenis Belanja', expId, `Jenis belanja ${deleted.namaJenisBelanja} dihapus`);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
       if (idx === -1) return sendJson(res, 404, { error: 'Jenis belanja tidak ditemukan' });
 
       if (method === 'PUT') {
         const body = await parseJsonBody(req);
+        unmarkDeleted(expId);
         db.expense_types[idx] = { ...db.expense_types[idx], ...body, updatedAt: new Date().toISOString() };
         writeDB(db);
         recordAuditLog(body.operator || 'admin', 'Ubah Jenis Belanja', expId, `Jenis belanja ${db.expense_types[idx].namaJenisBelanja} diubah`);
         return sendJson(res, 200, db.expense_types[idx]);
-      }
-
-      if (method === 'DELETE') {
-        const deleted = db.expense_types.splice(idx, 1)[0];
-        writeDB(db);
-        recordAuditLog('admin', 'Hapus Jenis Belanja', expId, `Jenis belanja ${deleted.namaJenisBelanja} dihapus`);
-        return sendJson(res, 200, { success: true });
       }
     }
 
@@ -225,8 +243,10 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       }
       if (method === 'POST') {
         const body = await parseJsonBody(req);
+        const itemId = body.id || `itm-${Date.now()}`;
+        unmarkDeleted(itemId);
         const newItem: ItemMaster = {
-          id: `itm-${Date.now()}`,
+          id: itemId,
           kodeBarang: body.kodeBarang || `BRG-${Date.now().toString().slice(-4)}`,
           namaBarang: body.namaBarang || '',
           satuan: body.satuan || 'Buah',
@@ -247,21 +267,25 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       const itmId = pathname.replace('/api/items/', '');
       const db = readDB();
       const idx = db.items.findIndex(i => i.id === itmId);
+
+      if (method === 'DELETE') {
+        markAsDeleted(itmId);
+        if (idx !== -1) {
+          const deleted = db.items[idx];
+          recordAuditLog('admin', 'Hapus Master Barang', itmId, `Barang ${deleted.namaBarang} dihapus`);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
       if (idx === -1) return sendJson(res, 404, { error: 'Barang tidak ditemukan' });
 
       if (method === 'PUT') {
         const body = await parseJsonBody(req);
+        unmarkDeleted(itmId);
         db.items[idx] = { ...db.items[idx], ...body, updatedAt: new Date().toISOString() };
         writeDB(db);
         recordAuditLog(body.operator || 'admin', 'Ubah Master Barang', itmId, `Barang ${db.items[idx].namaBarang} diubah`);
         return sendJson(res, 200, db.items[idx]);
-      }
-
-      if (method === 'DELETE') {
-        const deleted = db.items.splice(idx, 1)[0];
-        writeDB(db);
-        recordAuditLog('admin', 'Hapus Master Barang', itmId, `Barang ${deleted.namaBarang} dihapus`);
-        return sendJson(res, 200, { success: true });
       }
     }
 
@@ -273,12 +297,40 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       }
       if (method === 'POST') {
         const body = await parseJsonBody(req);
-        const nextNum = (db.transactions.length > 0 ? Math.max(...db.transactions.map(t => t.nomorUrut || 0)) : 0) + 1;
-        const trxId = body.id || `TRX-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(nextNum).padStart(4, '0')}`;
+        
+        // Find monotonic sequence number across existing transactions, deleted IDs, and document sequence
+        let maxSeq = 0;
+        for (const t of db.transactions) {
+          if (t.nomorUrut && t.nomorUrut > maxSeq) maxSeq = t.nomorUrut;
+          const match = t.id?.match(/-(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          }
+        }
+        if (db.deleted_ids && Array.isArray(db.deleted_ids)) {
+          for (const delId of db.deleted_ids) {
+            const match = delId?.match(/-(\d+)$/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            }
+          }
+        }
+        if (db.document_sequences?.nextSeqSP && (db.document_sequences.nextSeqSP - 1) > maxSeq) {
+          maxSeq = Math.max(maxSeq, db.document_sequences.nextSeqSP - 1);
+        }
+        const nextNum = Math.max(maxSeq, db.transactions.length) + 1;
+        const currentYear = new Date().getFullYear();
+        const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+        const trxId = body.id || `TRX-${currentYear}${currentMonth}-${String(nextNum).padStart(4, '0')}`;
+
+        // Ensure this ID is clean from deleted_ids
+        unmarkDeleted(trxId);
         
         const newTrx: Transaction = {
           id: trxId,
-          nomorUrut: nextNum,
+          nomorUrut: body.nomorUrut || nextNum,
           tanggalTransaksi: body.tanggalTransaksi || new Date().toISOString().split('T')[0],
           storeId: body.storeId || '',
           storeNama: body.storeNama || '',
@@ -310,7 +362,7 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
           updatedAt: new Date().toISOString(),
         };
 
-        db.transactions.unshift(newTrx);
+        db.transactions = [newTrx, ...db.transactions.filter(t => t.id !== trxId)];
         writeDB(db);
         recordAuditLog(newTrx.userPembuat, 'Membuat Transaksi', newTrx.id, `Transaksi belanja #${newTrx.nomorUrut} (${newTrx.storeNama}) senilai Rp ${newTrx.totalTransaksi.toLocaleString('id-ID')} disimpan`);
         return sendJson(res, 201, newTrx);
@@ -326,8 +378,28 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
         const existing = db.transactions.find(t => t.id === trxId);
         if (!existing) return sendJson(res, 404, { error: 'Transaksi tidak ditemukan' });
 
-        const nextNum = (db.transactions.length > 0 ? Math.max(...db.transactions.map(t => t.nomorUrut || 0)) : 0) + 1;
+        let maxSeq = 0;
+        for (const t of db.transactions) {
+          if (t.nomorUrut && t.nomorUrut > maxSeq) maxSeq = t.nomorUrut;
+          const match = t.id?.match(/-(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          }
+        }
+        if (db.deleted_ids && Array.isArray(db.deleted_ids)) {
+          for (const delId of db.deleted_ids) {
+            const match = delId?.match(/-(\d+)$/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            }
+          }
+        }
+        const nextNum = Math.max(maxSeq, db.transactions.length) + 1;
         const newTrxId = `TRX-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(nextNum).padStart(4, '0')}`;
+        unmarkDeleted(newTrxId);
+
         const copy: Transaction = {
           ...existing,
           id: newTrxId,
@@ -342,13 +414,23 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
           updatedAt: new Date().toISOString(),
           catatan: `(Duplikasi dari ${existing.id}) ${existing.catatan || ''}`.trim(),
         };
-        db.transactions.unshift(copy);
+        db.transactions = [copy, ...db.transactions.filter(t => t.id !== newTrxId)];
         writeDB(db);
         recordAuditLog('admin', 'Duplikasi Transaksi', newTrxId, `Menduplikasi transaksi ${existing.id} menjadi ${newTrxId}`);
         return sendJson(res, 201, copy);
       }
 
       const trxId = remaining;
+
+      if (method === 'DELETE') {
+        const deleted = db.transactions.find(t => t.id === trxId);
+        markAsDeleted(trxId);
+        if (deleted) {
+          recordAuditLog('admin', 'Hapus Transaksi', trxId, `Transaksi ${trxId} bernilai Rp ${deleted.totalTransaksi.toLocaleString('id-ID')} dihapus`);
+        }
+        return sendJson(res, 200, { success: true });
+      }
+
       const idx = db.transactions.findIndex(t => t.id === trxId);
       if (idx === -1) return sendJson(res, 404, { error: 'Transaksi tidak ditemukan' });
 
@@ -358,6 +440,7 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
 
       if (method === 'PUT') {
         const body = await parseJsonBody(req);
+        unmarkDeleted(trxId);
         db.transactions[idx] = {
           ...db.transactions[idx],
           ...body,
@@ -366,13 +449,6 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
         writeDB(db);
         recordAuditLog(body.operator || 'admin', 'Ubah Transaksi', trxId, `Transaksi ${trxId} (${db.transactions[idx].storeNama}) diperbarui`);
         return sendJson(res, 200, db.transactions[idx]);
-      }
-
-      if (method === 'DELETE') {
-        const deleted = db.transactions.splice(idx, 1)[0];
-        writeDB(db);
-        recordAuditLog('admin', 'Hapus Transaksi', trxId, `Transaksi ${trxId} bernilai Rp ${deleted.totalTransaksi.toLocaleString('id-ID')} dihapus`);
-        return sendJson(res, 200, { success: true });
       }
     }
 

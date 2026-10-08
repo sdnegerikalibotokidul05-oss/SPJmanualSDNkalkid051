@@ -472,34 +472,60 @@ export const DatabaseTransaksiView: React.FC<DatabaseTransaksiViewProps> = ({
                   Daftar Barang Belanja
                 </h4>
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px]">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold text-[11px]">
                       <tr>
-                        <th className="py-2 px-3 w-10 text-center">No</th>
-                        <th className="py-2 px-3">Uraian</th>
-                        <th className="py-2 px-3 w-16">Satuan</th>
-                        <th className="py-2 px-3 w-16 text-right">Vol</th>
-                        <th className="py-2 px-3 w-28 text-right">Harga Final</th>
-                        <th className="py-2 px-3 w-28">Pajak</th>
-                        <th className="py-2 px-3 w-28 text-right">Jumlah</th>
+                        <th className="py-2.5 px-3 w-8 text-center">No</th>
+                        <th className="py-2.5 px-3">Uraian Barang / Jasa</th>
+                        <th className="py-2.5 px-2 w-14 text-center bg-slate-100">Vol</th>
+                        <th className="py-2.5 px-3 w-20">Satuan</th>
+                        <th className="py-2.5 px-3 w-28 text-left">Harga Final</th>
+                        <th className="py-2.5 px-3 w-28 text-left">Total Belanja</th>
+                        <th className="py-2.5 px-3 w-28 text-left">DPP</th>
+                        <th className="py-2.5 px-3 w-36 text-left">Pajak</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 font-mono">
-                      {detailTrx.items.map((it, idx) => (
-                        <tr key={it.id || idx}>
-                          <td className="py-2 px-3 text-center text-slate-400 font-sans">{idx + 1}</td>
-                          <td className="py-2 px-3 font-sans font-medium text-slate-900">{it.uraian}</td>
-                          <td className="py-2 px-3 font-sans text-slate-600">{it.satuan}</td>
-                          <td className="py-2 px-3 text-right text-slate-800">{it.volume}</td>
-                          <td className="py-2 px-3 text-right text-slate-800">{formatRupiah(it.harga)}</td>
-                          <td className="py-2 px-3 font-sans text-[11px] text-slate-700">
-                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] bg-slate-100 font-medium">
-                              {getTaxLabel(it.pajak)}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3 text-right font-bold text-slate-900">{formatRupiah(it.jumlah)}</td>
-                        </tr>
-                      ))}
+                    <tbody className="divide-y divide-slate-100 font-sans">
+                      {detailTrx.items.map((it, idx) => {
+                        const hasPPN = (it.ppn || 0) > 0;
+                        const hasPPh23 = (it.pph23 || 0) > 0;
+                        let pphRateLabel = 'PPh 23 4%';
+                        if (it.pajak === 'PPH23_3' || it.pajak === 'PPH23_3_PPN') {
+                          pphRateLabel = 'PPh 23 3%';
+                        }
+
+                        return (
+                          <tr key={it.id || idx} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3 text-center text-slate-400 font-mono">{idx + 1}</td>
+                            <td className="py-2.5 px-3 font-medium text-slate-900">{it.uraian}</td>
+                            <td className="py-2.5 px-2 text-center bg-slate-100/60 font-mono text-slate-800">{it.volume}</td>
+                            <td className="py-2.5 px-3 text-slate-600">{it.satuan}</td>
+                            <td className="py-2.5 px-3 text-left font-mono text-slate-800">{formatRupiah(it.harga)}</td>
+                            <td className="py-2.5 px-3 text-left font-mono font-semibold text-slate-900">{formatRupiah(it.jumlah)}</td>
+                            <td className="py-2.5 px-3 text-left font-mono text-slate-700">{formatRupiah(it.dpp)}</td>
+                            <td className="py-2.5 px-3 text-left text-[11px] align-top">
+                              {hasPPN || hasPPh23 ? (
+                                <div className="space-y-1 leading-tight font-mono">
+                                  {hasPPN && (
+                                    <div>
+                                      <div className="font-semibold text-slate-700 font-sans">PPn 11% :</div>
+                                      <div className="text-slate-900">{formatRupiah(it.ppn!)}</div>
+                                    </div>
+                                  )}
+                                  {hasPPh23 && (
+                                    <div>
+                                      <div className="font-semibold text-slate-700 font-sans">{pphRateLabel} :</div>
+                                      <div className="text-slate-900">{formatRupiah(it.pph23!)}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

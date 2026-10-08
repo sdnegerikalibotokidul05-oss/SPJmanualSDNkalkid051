@@ -184,4 +184,5 @@ export interface DatabaseSchema {
   transactions: Transaction[];
   document_sequences: DocumentSequenceConfig;
   audit_logs: AuditLog[];
+  deleted_ids?: string[];
 }

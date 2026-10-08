@@ -97,6 +97,7 @@ const MainApp: React.FC = () => {
 
   // When new transaction is saved
   const handleTransactionSuccess = (savedTrx: Transaction, openDocModal?: boolean) => {
+    setTransactions(prev => [savedTrx, ...prev.filter(t => t.id !== savedTrx.id)]);
     fetchAppData();
     setEditingTransaction(null);
     if (openDocModal) {

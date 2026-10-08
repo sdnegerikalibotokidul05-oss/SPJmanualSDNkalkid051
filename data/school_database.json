@@ -223,68 +223,6 @@
   ],
   "transactions": [
     {
-      "id": "TRX-202610-0003",
-      "nomorUrut": 3,
-      "tanggalTransaksi": "2026-10-06",
-      "storeId": "store-2",
-      "storeNama": "CV. Graha Media Mandiri",
-      "storePemilik": "Hendra Kurniawan, S.E.",
-      "storeAlamat": "Jl. Ahmad Yani No. 45 Lumajang",
-      "storeTelepon": "",
-      "expenseTypeId": "exp-3",
-      "expenseTypeName": "Belanja Penggandaan & Cetak Soal Ujian",
-      "nomorSP": "004/SP/SDN-KK05/X/2026",
-      "tanggalSP": "2026-10-06",
-      "nomorBAST": "004/BAST/SDN-KK05/X/2026",
-      "tanggalBAST": "2026-10-06",
-      "nomorBAHPB": "004/BAHPB/SDN-KK05/X/2026",
-      "tanggalBAHPB": "2026-10-06",
-      "nomorBAPB": "004/BAPB/SDN-KK05/X/2026",
-      "tanggalBAPB": "2026-10-06",
-      "items": [
-        {
-          "id": "test-1",
-          "no": 1,
-          "uraian": "Jasa Cetak Modul Pembelajaran",
-          "satuan": "Buku",
-          "volume": 100,
-          "harga": 11100,
-          "pajak": "PPH23_PPN",
-          "jumlah": 1110000,
-          "dpp": 1000000,
-          "ppn": 110000,
-          "pph23": 20000,
-          "nilaiPajak": 130000
-        },
-        {
-          "id": "test-2",
-          "no": 2,
-          "uraian": "Jasa Servis Komputer & Printer (Non-NPWP)",
-          "satuan": "Kegiatan",
-          "volume": 1,
-          "harga": 500000,
-          "pajak": "PPH23_4",
-          "jumlah": 500000,
-          "dpp": 500000,
-          "ppn": 0,
-          "pph23": 20000,
-          "nilaiPajak": 20000
-        }
-      ],
-      "totalTransaksi": 1610000,
-      "totalDPP": 1500000,
-      "totalPPN": 110000,
-      "totalPPh23": 40000,
-      "totalPajak": 150000,
-      "statusPajakSummary": "Kombinasi (PPh 23 + PPN, PPh 23 4%)",
-      "userPembuat": "admin",
-      "timestamp": "2026-10-06T02:43:12.392Z",
-      "status": "Selesai",
-      "catatan": "",
-      "createdAt": "2026-10-06T02:43:12.392Z",
-      "updatedAt": "2026-10-06T02:43:12.392Z"
-    },
-    {
       "id": "TRX-202610-0001",
       "nomorUrut": 1,
       "tanggalTransaksi": "2026-10-02",
@@ -359,68 +297,6 @@
       "catatan": "Pengadaan ATK semester ganjil untuk kegiatan administrasi guru dan kantor sekolah",
       "createdAt": "2026-10-02T08:30:00.000Z",
       "updatedAt": "2026-10-04T10:00:00.000Z"
-    },
-    {
-      "id": "TRX-202610-0002",
-      "nomorUrut": 2,
-      "tanggalTransaksi": "2026-10-05",
-      "storeId": "store-3",
-      "storeNama": "UD. Berkah Sarana Edukasi",
-      "storePemilik": "Budi Santoso",
-      "storeAlamat": "Jl. Panglima Sudirman No. 88, Lumajang",
-      "storeTelepon": "081259876543",
-      "expenseTypeId": "exp-2",
-      "expenseTypeName": "Belanja Bahan Pembersih & Sanitasi",
-      "nomorSP": "002/SP/SDN-KK05/X/2026",
-      "tanggalSP": "2026-10-05",
-      "nomorBAST": "002/BAST/SDN-KK05/X/2026",
-      "tanggalBAST": "2026-10-05",
-      "nomorBAHPB": "002/BAHPB/SDN-KK05/X/2026",
-      "tanggalBAHPB": "2026-10-05",
-      "nomorBAPB": "002/BAPB/SDN-KK05/X/2026",
-      "tanggalBAPB": "2026-10-05",
-      "items": [
-        {
-          "id": "item-4",
-          "no": 1,
-          "uraian": "Cairan Pembersih Lantai Wipol 750ml",
-          "satuan": "Pouch",
-          "volume": 5,
-          "harga": 18500,
-          "pajak": "PPN_11",
-          "jumlah": 92500,
-          "dpp": 83333,
-          "ppn": 9167,
-          "pph23": 0,
-          "nilaiPajak": 9167
-        },
-        {
-          "id": "item-5",
-          "no": 2,
-          "uraian": "Sapu Ijuk Standar Sekolah Berkualitas",
-          "satuan": "Buah",
-          "volume": 6,
-          "harga": 27500,
-          "pajak": "NON",
-          "jumlah": 165000,
-          "dpp": 165000,
-          "ppn": 0,
-          "pph23": 0,
-          "nilaiPajak": 0
-        }
-      ],
-      "totalTransaksi": 257500,
-      "totalDPP": 248333,
-      "totalPPN": 9167,
-      "totalPPh23": 0,
-      "totalPajak": 9167,
-      "statusPajakSummary": "Kombinasi (PPN 11%, Tanpa Pajak)",
-      "userPembuat": "admin",
-      "timestamp": "2026-10-05T09:15:00.000Z",
-      "status": "Selesai",
-      "catatan": "Pengadaan bahan sanitasi dan kebersihan lingkungan sekolah rutin bulanan",
-      "createdAt": "2026-10-05T09:15:00.000Z",
-      "updatedAt": "2026-10-05T11:20:00.000Z"
     }
   ],
   "document_sequences": {
@@ -431,13 +307,125 @@
     "formatBAST": "{nomor}/BAST/{kode_sekolah}/{romawi}/{tahun}",
     "formatBAHPB": "{nomor}/BAHPB/{kode_sekolah}/{romawi}/{tahun}",
     "formatBAPB": "{nomor}/BAPB/{kode_sekolah}/{romawi}/{tahun}",
-    "nextSeqSP": 3,
-    "nextSeqBAST": 3,
-    "nextSeqBAHPB": 3,
-    "nextSeqBAPB": 3,
-    "updatedAt": "2026-10-05T08:00:00.000Z"
+    "nextSeqSP": 4,
+    "nextSeqBAST": 4,
+    "nextSeqBAHPB": 4,
+    "nextSeqBAPB": 4,
+    "updatedAt": "2026-10-08T00:16:59.551Z"
   },
   "audit_logs": [
+    {
+      "id": "log-1791420523759-aa8jg",
+      "user": "admin",
+      "aktivitas": "Tambah Data Toko",
+      "waktu": "2026-10-08T00:48:43.760Z",
+      "idData": "store-1791420523759",
+      "keterangan": "Toko Toko Uji Coba ditambahkan"
+    },
+    {
+      "id": "log-1791420523741-cwh5u",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T00:48:43.741Z",
+      "idData": "TRX-202610-0005",
+      "keterangan": "Transaksi TRX-202610-0005 bernilai Rp 150.000 dihapus"
+    },
+    {
+      "id": "log-1791420508260-9x4h1",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:48:28.260Z",
+      "idData": "TRX-202610-0005",
+      "keterangan": "Transaksi belanja #5 (CV. Multi Edukasi) senilai Rp 150.000 disimpan"
+    },
+    {
+      "id": "log-1791420508250-dtxcn",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T00:48:28.250Z",
+      "idData": "TRX-202610-0004",
+      "keterangan": "Transaksi TRX-202610-0004 bernilai Rp 350.000 dihapus"
+    },
+    {
+      "id": "log-1791420508241-1ug8d",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:48:28.241Z",
+      "idData": "TRX-202610-0004",
+      "keterangan": "Transaksi belanja #4 (Toko Sumber Barokah) senilai Rp 350.000 disimpan"
+    },
+    {
+      "id": "log-1791420063677-vmk4z",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:41:03.677Z",
+      "idData": "TRX-202610-0002",
+      "keterangan": "Transaksi belanja #2 (Toko Sukses) senilai Rp 250.000 disimpan"
+    },
+    {
+      "id": "log-1791420059116-fne13",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T00:40:59.116Z",
+      "idData": "TRX-202610-0002",
+      "keterangan": "Transaksi TRX-202610-0002 bernilai Rp 257.500 dihapus"
+    },
+    {
+      "id": "log-1791419921316-02j6r",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:38:41.316Z",
+      "idData": "TRX-202610-0003",
+      "keterangan": "Transaksi belanja #3 (Toko Baru 1) senilai Rp 123.000 disimpan"
+    },
+    {
+      "id": "log-1791419872559-qgwpe",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:37:52.559Z",
+      "idData": "TRX-202610-0003",
+      "keterangan": "Transaksi belanja #3 (Toko Test) senilai Rp 50.000 disimpan"
+    },
+    {
+      "id": "log-1791419689093-ythq1",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T00:34:49.093Z",
+      "idData": "TRX-202610-0003",
+      "keterangan": "Transaksi TRX-202610-0003 bernilai Rp 10.000 dihapus"
+    },
+    {
+      "id": "log-1791419689081-ia6zt",
+      "user": "admin",
+      "aktivitas": "Membuat Transaksi",
+      "waktu": "2026-10-08T00:34:49.081Z",
+      "idData": "TRX-202610-0003",
+      "keterangan": "Transaksi belanja #3 (Toko Uji Coba Hapus) senilai Rp 10.000 disimpan"
+    },
+    {
+      "id": "log-1791419307818-xt51w",
+      "user": "admin",
+      "aktivitas": "Hapus Transaksi",
+      "waktu": "2026-10-08T00:28:27.818Z",
+      "idData": "TRX-202610-0003",
+      "keterangan": "Transaksi TRX-202610-0003 bernilai Rp 1.610.000 dihapus"
+    },
+    {
+      "id": "log-1791418480092-ai3eh",
+      "user": "admin",
+      "aktivitas": "Login Pengguna",
+      "waktu": "2026-10-08T00:14:40.092Z",
+      "idData": "usr-1",
+      "keterangan": "User admin berhasil login"
+    },
+    {
+      "id": "log-1791418463548-4c2m4",
+      "user": "admin",
+      "aktivitas": "Login Pengguna",
+      "waktu": "2026-10-08T00:14:23.548Z",
+      "idData": "usr-1",
+      "keterangan": "User admin berhasil login"
+    },
     {
       "id": "log-1791254592404-4tkyj",
       "user": "admin",
@@ -478,5 +466,12 @@
       "idData": "TRX-202610-0002",
       "keterangan": "Transaksi Belanja Bahan Pembersih UD. Berkah Sarana Edukasi senilai Rp 257.500 dibuat"
     }
+  ],
+  "deleted_ids": [
+    "TRX-202610-0003",
+    "TRX-202610-0002",
+    "TRX-202610-0004",
+    "TRX-202610-0005",
+    "store-1791420523759"
   ]
 }
